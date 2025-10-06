@@ -44,16 +44,62 @@ function mostrarRegistros(registros) {
         return;
     }
 
-    const html = registros.map(reg => `
-        <tr>
-            <td>${formatearFecha(reg['Fecha y Hora'] || reg['fechaHora'])}</td>
-            <td>${reg['Responsable'] || reg['responsable'] || ''}</td>
-            <td>${reg['Tema / Asunto'] || reg['tema'] || ''}</td>
-            <td>${reg['Actividades Realizadas'] || reg['actividades'] || ''}</td>
-            <td>${reg['Nº Personas ECSA'] || reg['numeroEcsa'] || 0}</td>
-            <td>${reg['Nº Personas Contratista'] || reg['numeroContratista'] || 0}</td>
-        </tr>
-    `).join('');
+    const html = registros.map(reg => {
+        // Manejar diferentes posibles nombres de columnas
+        const fecha = formatearFecha(
+            reg['Fecha y Hora'] || 
+            reg['fechaHora'] || 
+            reg['fecha_y_hora'] || 
+            reg['date'] || 
+            reg[0] || '' // Por si los datos vienen como array
+        );
+        
+        const responsable = 
+            reg['Responsable'] || 
+            reg['responsable'] || 
+            reg['nombre_responsable'] || 
+            reg['name'] || 
+            reg[1] || '';
+            
+        const tema = 
+            reg['Tema / Asunto'] || 
+            reg['tema'] || 
+            reg['asunto'] || 
+            reg['subject'] || 
+            reg[2] || '';
+            
+        const actividades = 
+            reg['Actividades Realizadas'] || 
+            reg['actividades'] || 
+            reg['descripcion'] || 
+            reg['description'] || 
+            reg[3] || '';
+            
+        const numeroEcsa = 
+            reg['Nº Personas ECSA'] || 
+            reg['numeroEcsa'] || 
+            reg['personas_ecsa'] || 
+            reg['ecsa_count'] || 
+            reg[4] || 0;
+            
+        const numeroContratista = 
+            reg['Nº Personas Contratista'] || 
+            reg['numeroContratista'] || 
+            reg['personas_contratista'] || 
+            reg['contractor_count'] || 
+            reg[5] || 0;
+
+        return `
+            <tr>
+                <td>${fecha}</td>
+                <td>${responsable}</td>
+                <td>${tema}</td>
+                <td>${actividades}</td>
+                <td>${numeroEcsa}</td>
+                <td>${numeroContratista}</td>
+            </tr>
+        `;
+    }).join('');
     cuerpoTabla.innerHTML = html;
 }
 
@@ -63,8 +109,23 @@ function actualizarGrafico(registros) {
     let totalEcsa = 0;
     let totalContratista = 0;
     registros.forEach(reg => {
-        totalEcsa += parseInt(reg['Nº Personas ECSA'] || reg['numeroEcsa'] || 0);
-        totalContratista += parseInt(reg['Nº Personas Contratista'] || reg['numeroContratista'] || 0);
+        // Manejar diferentes posibles nombres de columnas
+        const ecsaValue = 
+            reg['Nº Personas ECSA'] || 
+            reg['numeroEcsa'] || 
+            reg['personas_ecsa'] || 
+            reg['ecsa_count'] || 
+            reg[4] || 0;
+            
+        const contratistaValue = 
+            reg['Nº Personas Contratista'] || 
+            reg['numeroContratista'] || 
+            reg['personas_contratista'] || 
+            reg['contractor_count'] || 
+            reg[5] || 0;
+            
+        totalEcsa += parseInt(ecsaValue) || 0;
+        totalContratista += parseInt(contratistaValue) || 0;
     });
 
     if (grafico) grafico.destroy();
@@ -100,15 +161,35 @@ function aplicarFiltros() {
     const fechaHasta = document.getElementById('fechaHasta').value;
 
     const filtrados = todosLosRegistros.filter(reg => {
-        const responsable = (reg['Responsable'] || reg['responsable'] || '').toLowerCase();
-        const tema = (reg['Tema / Asunto'] || reg['tema'] || '').toLowerCase();
+        // Manejar diferentes posibles nombres de columnas
+        const responsable = (
+            reg['Responsable'] || 
+            reg['responsable'] || 
+            reg['nombre_responsable'] || 
+            reg['name'] || 
+            reg[1] || ''
+        ).toLowerCase();
+        
+        const tema = (
+            reg['Tema / Asunto'] || 
+            reg['tema'] || 
+            reg['asunto'] || 
+            reg['subject'] || 
+            reg[2] || ''
+        ).toLowerCase();
         
         // Aplicar filtros si hay texto en los campos
         if (filtroResp && !responsable.includes(filtroResp)) return false;
         if (filtroTema && !tema.includes(filtroTema)) return false;
 
         // Filtrar por fechas si están especificadas
-        const fechaRegistro = extraerFecha(reg['Fecha y Hora'] || reg['fechaHora']);
+        const fechaRegistro = extraerFecha(
+            reg['Fecha y Hora'] || 
+            reg['fechaHora'] || 
+            reg['fecha_y_hora'] || 
+            reg['date'] || 
+            reg[0] || ''
+        );
         if (fechaDesde && fechaRegistro < fechaDesde) return false;
         if (fechaHasta && fechaRegistro > fechaHasta) return false;
 
@@ -129,10 +210,20 @@ async function cargarDatos() {
         const response = await fetch(SCRIPT_URL, { method: 'GET', mode: 'cors' });
         const data = await response.json();
 
+        console.log('Datos recibidos de Google Apps Script:', data); // Debug log
+        
         if (Array.isArray(data)) {
             todosLosRegistros = data;
             // Guardar en localStorage como respaldo
             guardarDatosLocales();
+            
+            // Mostrar mensaje si hay datos
+            if (data.length > 0) {
+                console.log('Primer registro recibido:', data[0]); // Debug log
+                mensajeDiv.innerHTML = `<div class="alert alert-success">✅ Cargados ${data.length} registros</div>`;
+            } else {
+                mensajeDiv.innerHTML = '<div class="alert alert-info">No hay registros en la hoja de cálculo</div>';
+            }
         } else {
             throw new Error(data.error || 'Formato de datos incorrecto');
         }
@@ -142,7 +233,7 @@ async function cargarDatos() {
         const datosLocales = cargarDatosLocales();
         if (datosLocales.length > 0) {
             todosLosRegistros = datosLocales;
-            mensajeDiv.innerHTML = '<div class="alert alert-warning">Cargando datos locales. No se pudo conectar con Google Apps Script.</div>';
+            mensajeDiv.innerHTML = `<div class="alert alert-warning">Cargando ${datosLocales.length} registros locales. No se pudo conectar con Google Apps Script.</div>`;
         } else {
             // Si tampoco hay datos locales, mostrar mensaje de error
             mensajeDiv.innerHTML = `<div class="alert alert-danger">Error al cargar los datos: ${error.message}. No hay datos locales disponibles.</div>`;
@@ -151,7 +242,13 @@ async function cargarDatos() {
     }
 
     aplicarFiltros();
-    mensajeDiv.innerHTML = '';
+    
+    // Ocultar mensaje después de 3 segundos si no es un error
+    if (!mensajeDiv.innerHTML.includes('alert-danger')) {
+        setTimeout(() => {
+            mensajeDiv.innerHTML = '';
+        }, 3000);
+    }
 }
 
 function exportarAExcel() {
@@ -163,12 +260,43 @@ function exportarAExcel() {
     }
 
     const datosExcel = registrosFiltrados.map(reg => ({
-        'Fecha y Hora': formatearFecha(reg['Fecha y Hora'] || reg['fechaHora']),
-        'Responsable': reg['Responsable'] || reg['responsable'] || '',
-        'Tema / Asunto': reg['Tema / Asunto'] || reg['tema'] || '',
-        'Actividades Realizadas': reg['Actividades Realizadas'] || reg['actividades'] || '',
-        'Nº Personas ECSA': reg['Nº Personas ECSA'] || reg['numeroEcsa'] || 0,
-        'Nº Personas Contratista': reg['Nº Personas Contratista'] || reg['numeroContratista'] || 0,
+        'Fecha y Hora': formatearFecha(
+            reg['Fecha y Hora'] || 
+            reg['fechaHora'] || 
+            reg['fecha_y_hora'] || 
+            reg['date'] || 
+            reg[0] || ''
+        ),
+        'Responsable': 
+            reg['Responsable'] || 
+            reg['responsable'] || 
+            reg['nombre_responsable'] || 
+            reg['name'] || 
+            reg[1] || '',
+        'Tema / Asunto': 
+            reg['Tema / Asunto'] || 
+            reg['tema'] || 
+            reg['asunto'] || 
+            reg['subject'] || 
+            reg[2] || '',
+        'Actividades Realizadas': 
+            reg['Actividades Realizadas'] || 
+            reg['actividades'] || 
+            reg['descripcion'] || 
+            reg['description'] || 
+            reg[3] || '',
+        'Nº Personas ECSA': 
+            reg['Nº Personas ECSA'] || 
+            reg['numeroEcsa'] || 
+            reg['personas_ecsa'] || 
+            reg['ecsa_count'] || 
+            reg[4] || 0,
+        'Nº Personas Contratista': 
+            reg['Nº Personas Contratista'] || 
+            reg['numeroContratista'] || 
+            reg['personas_contratista'] || 
+            reg['contractor_count'] || 
+            reg[5] || 0,
     }));
 
     const ws = XLSX.utils.json_to_sheet(datosExcel);
@@ -221,10 +349,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const formData = new FormData(form);
         const data = Object.fromEntries(formData);
+        
+        console.log('Datos a enviar:', data); // Debug log
 
         try {
             // Convert form data to URLSearchParams for Google Apps Script
             const params = new URLSearchParams(data);
+            
+            console.log('Parámetros a enviar:', params.toString()); // Debug log
             
             const response = await fetch(SCRIPT_URL, {
                 method: 'POST',
@@ -234,6 +366,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             const result = await response.text();
+            
+            console.log('Respuesta de Google Apps Script:', result); // Debug log
 
             if (response.ok) {
                 mensajeDiv.innerHTML = `
@@ -253,6 +387,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 };
                 todosLosRegistros.push(nuevoRegistro);
                 guardarDatosLocales();
+                
+                // Actualizar la vista si estamos en la pestaña de consulta
+                if (document.querySelector('#consulta').classList.contains('show')) {
+                    aplicarFiltros();
+                }
+                
                 form.reset();
                 const now = new Date();
                 const year = now.getFullYear();
@@ -277,6 +417,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 todosLosRegistros.push(nuevoRegistro);
                 guardarDatosLocales();
                 
+                // Actualizar la vista si estamos en la pestaña de consulta
+                if (document.querySelector('#consulta').classList.contains('show')) {
+                    aplicarFiltros();
+                }
+                
                 mensajeDiv.innerHTML = `<div class="alert alert-warning">⚠️ Registro guardado localmente. Error al enviar a Google Apps Script.</div>`;
             }
         } catch (error) {
@@ -295,6 +440,11 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             todosLosRegistros.push(nuevoRegistro);
             guardarDatosLocales();
+            
+            // Actualizar la vista si estamos en la pestaña de consulta
+            if (document.querySelector('#consulta').classList.contains('show')) {
+                aplicarFiltros();
+            }
             
             mensajeDiv.innerHTML = `<div class="alert alert-warning">⚠️ Error de red. Registro guardado localmente: ${error.message}</div>`;
         } finally {
