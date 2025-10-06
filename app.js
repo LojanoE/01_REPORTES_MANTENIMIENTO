@@ -18,6 +18,17 @@ function extraerFecha(fechaStr) {
     return isNaN(date) ? '' : date.toISOString().split('T')[0];
 }
 
+// Función de utilidad para debug que puedes usar temporalmente
+function debugDatos() {
+    console.log('=== DEBUG DATOS ===');
+    console.log('Todos los registros:', todosLosRegistros);
+    if (todosLosRegistros.length > 0) {
+        console.log('Primer registro:', todosLosRegistros[0]);
+        console.log('Claves del primer registro:', Object.keys(todosLosRegistros[0]));
+    }
+    console.log('==================');
+}
+
 // Función para guardar datos en localStorage como respaldo
 function guardarDatosLocales() {
     localStorage.setItem('registrosMantenimiento', JSON.stringify(todosLosRegistros));
@@ -213,14 +224,43 @@ async function cargarDatos() {
         console.log('Datos recibidos de Google Apps Script:', data); // Debug log
         
         if (Array.isArray(data)) {
-            todosLosRegistros = data;
+            // Procesar los datos recibidos para manejar posibles diferencias de estructura
+            let registrosProcesados = [];
+            
+            if (data.length > 0) {
+                // Verificar si el primer elemento parece ser un encabezado
+                const primerElemento = data[0];
+                
+                // Si el primer elemento es un array, significa que no hay encabezados definidos en Google Sheets
+                // y necesitamos crear objetos con propiedades basadas en índices
+                if (Array.isArray(primerElemento)) {
+                    registrosProcesados = data.map(row => {
+                        if (Array.isArray(row)) {
+                            return {
+                                'Fecha y Hora': row[0] || '',
+                                'Responsable': row[1] || '',
+                                'Tema / Asunto': row[2] || '',
+                                'Actividades Realizadas': row[3] || '',
+                                'Nº Personas ECSA': row[4] || 0,
+                                'Nº Personas Contratista': row[5] || 0
+                            };
+                        }
+                        return row;
+                    });
+                } else {
+                    // Si el primer elemento es un objeto, ya tiene las propiedades con nombres
+                    registrosProcesados = data;
+                }
+            }
+            
+            todosLosRegistros = registrosProcesados;
             // Guardar en localStorage como respaldo
             guardarDatosLocales();
             
             // Mostrar mensaje si hay datos
-            if (data.length > 0) {
-                console.log('Primer registro recibido:', data[0]); // Debug log
-                mensajeDiv.innerHTML = `<div class="alert alert-success">✅ Cargados ${data.length} registros</div>`;
+            if (registrosProcesados.length > 0) {
+                console.log('Primer registro recibido:', registrosProcesados[0]); // Debug log
+                mensajeDiv.innerHTML = `<div class="alert alert-success">✅ Cargados ${registrosProcesados.length} registros</div>`;
             } else {
                 mensajeDiv.innerHTML = '<div class="alert alert-info">No hay registros en la hoja de cálculo</div>';
             }
