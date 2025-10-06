@@ -18,6 +18,25 @@ function extraerFecha(fechaStr) {
     return isNaN(date) ? '' : date.toISOString().split('T')[0];
 }
 
+// Función para guardar datos en localStorage como respaldo
+function guardarDatosLocales() {
+    localStorage.setItem('registrosMantenimiento', JSON.stringify(todosLosRegistros));
+}
+
+// Función para cargar datos desde localStorage
+function cargarDatosLocales() {
+    const datosGuardados = localStorage.getItem('registrosMantenimiento');
+    if (datosGuardados) {
+        try {
+            return JSON.parse(datosGuardados);
+        } catch (error) {
+            console.error('Error al parsear datos locales:', error);
+            return [];
+        }
+    }
+    return [];
+}
+
 function mostrarRegistros(registros) {
     const cuerpoTabla = document.getElementById('cuerpoTabla');
     if (!registros || registros.length === 0) {
@@ -52,11 +71,11 @@ function actualizarGrafico(registros) {
 
     grafico = new Chart(ctx, {
         type: 'bar',
-         {
+        data: {
             labels: ['Personas ECSA', 'Personas Contratista'],
             datasets: [{
                 label: 'Número de Personas',
-                 [totalEcsa, totalContratista],
+                data: [totalEcsa, totalContratista],
                 backgroundColor: ['#0d6efd', '#198754'],
                 borderWidth: 1
             }]
@@ -75,16 +94,20 @@ function actualizarGrafico(registros) {
 }
 
 function aplicarFiltros() {
-    const filtroResp = document.getElementById('filtroResponsable').value.toLowerCase();
-    const filtroTema = document.getElementById('filtroTema').value.toLowerCase();
+    const filtroResp = document.getElementById('filtroResponsable').value.toLowerCase().trim();
+    const filtroTema = document.getElementById('filtroTema').value.toLowerCase().trim();
     const fechaDesde = document.getElementById('fechaDesde').value;
     const fechaHasta = document.getElementById('fechaHasta').value;
 
     const filtrados = todosLosRegistros.filter(reg => {
         const responsable = (reg['Responsable'] || reg['responsable'] || '').toLowerCase();
         const tema = (reg['Tema / Asunto'] || reg['tema'] || '').toLowerCase();
-        if (!responsable.includes(filtroResp) || !tema.includes(filtroTema)) return false;
+        
+        // Aplicar filtros si hay texto en los campos
+        if (filtroResp && !responsable.includes(filtroResp)) return false;
+        if (filtroTema && !tema.includes(filtroTema)) return false;
 
+        // Filtrar por fechas si están especificadas
         const fechaRegistro = extraerFecha(reg['Fecha y Hora'] || reg['fechaHora']);
         if (fechaDesde && fechaRegistro < fechaDesde) return false;
         if (fechaHasta && fechaRegistro > fechaHasta) return false;
@@ -102,21 +125,33 @@ async function cargarDatos() {
     mensajeDiv.innerHTML = '<div class="alert alert-info">Cargando datos...</div>';
 
     try {
-        const response = await fetch(SCRIPT_URL);
+        // Intentar cargar desde Google Apps Script
+        const response = await fetch(SCRIPT_URL, { method: 'GET', mode: 'cors' });
         const data = await response.json();
 
         if (Array.isArray(data)) {
             todosLosRegistros = data;
-            aplicarFiltros();
-            mensajeDiv.innerHTML = '';
+            // Guardar en localStorage como respaldo
+            guardarDatosLocales();
         } else {
-            throw new Error(data.error || 'Error desconocido');
+            throw new Error(data.error || 'Formato de datos incorrecto');
         }
     } catch (error) {
-        console.error('Error al cargar:', error);
-        mensajeDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
-        document.getElementById('cuerpoTabla').innerHTML = '<tr><td colspan="6" class="text-center">Error al cargar</td></tr>';
+        console.error('Error al cargar desde Google Apps Script:', error);
+        // Si falla, intentar cargar desde localStorage
+        const datosLocales = cargarDatosLocales();
+        if (datosLocales.length > 0) {
+            todosLosRegistros = datosLocales;
+            mensajeDiv.innerHTML = '<div class="alert alert-warning">Cargando datos locales. No se pudo conectar con Google Apps Script.</div>';
+        } else {
+            // Si tampoco hay datos locales, mostrar mensaje de error
+            mensajeDiv.innerHTML = `<div class="alert alert-danger">Error al cargar los datos: ${error.message}. No hay datos locales disponibles.</div>`;
+            todosLosRegistros = [];
+        }
     }
+
+    aplicarFiltros();
+    mensajeDiv.innerHTML = '';
 }
 
 function exportarAExcel() {
@@ -140,6 +175,13 @@ function exportarAExcel() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Reportes");
     XLSX.writeFile(wb, "Reportes_Mantenimiento.xlsx");
+    
+    // Mostrar mensaje de éxito
+    const mensajeDiv = document.getElementById('mensajeConsulta');
+    mensajeDiv.innerHTML = '<div class="alert alert-success">✅ Datos exportados exitosamente a Excel.</div>';
+    setTimeout(() => {
+        mensajeDiv.innerHTML = '';
+    }, 3000);
 }
 
 // ===== INICIALIZACIÓN =====
@@ -181,10 +223,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const data = Object.fromEntries(formData);
 
         try {
+            // Convert form data to URLSearchParams for Google Apps Script
+            const params = new URLSearchParams(data);
+            
             const response = await fetch(SCRIPT_URL, {
                 method: 'POST',
+                mode: 'cors',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams(data),
+                body: params,
             });
 
             const result = await response.text();
@@ -196,6 +242,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
                     </div>
                 `;
+                // Agregar el registro a la lista local
+                const nuevoRegistro = {
+                    'Fecha y Hora': data.fechaHora,
+                    'Responsable': data.responsable,
+                    'Tema / Asunto': data.tema,
+                    'Actividades Realizadas': data.actividades,
+                    'Nº Personas ECSA': data.numeroEcsa,
+                    'Nº Personas Contratista': data.numeroContratista
+                };
+                todosLosRegistros.push(nuevoRegistro);
+                guardarDatosLocales();
                 form.reset();
                 const now = new Date();
                 const year = now.getFullYear();
@@ -205,11 +262,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 const minutes = String(now.getMinutes()).padStart(2, '0');
                 document.getElementById('fechaHora').value = `${year}-${month}-${day}T${hours}:${minutes}`;
             } else {
-                mensajeDiv.innerHTML = `<div class="alert alert-danger">❌ Error: ${result}</div>`;
+                // Si falla el envío a Google Apps Script, guardar localmente
+                console.warn('Fallo envío a Google Apps Script, guardando localmente:', result);
+                
+                // Agregar el registro a la lista local de todas formas
+                const nuevoRegistro = {
+                    'Fecha y Hora': data.fechaHora,
+                    'Responsable': data.responsable,
+                    'Tema / Asunto': data.tema,
+                    'Actividades Realizadas': data.actividades,
+                    'Nº Personas ECSA': data.numeroEcsa,
+                    'Nº Personas Contratista': data.numeroContratista
+                };
+                todosLosRegistros.push(nuevoRegistro);
+                guardarDatosLocales();
+                
+                mensajeDiv.innerHTML = `<div class="alert alert-warning">⚠️ Registro guardado localmente. Error al enviar a Google Apps Script.</div>`;
             }
         } catch (error) {
             console.error('Error:', error);
-            mensajeDiv.innerHTML = `<div class="alert alert-warning">⚠️ Error de red: ${error.message}</div>`;
+            // En caso de error de red, guardar localmente
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+            
+            const nuevoRegistro = {
+                'Fecha y Hora': data.fechaHora,
+                'Responsable': data.responsable,
+                'Tema / Asunto': data.tema,
+                'Actividades Realizadas': data.actividades,
+                'Nº Personas ECSA': data.numeroEcsa,
+                'Nº Personas Contratista': data.numeroContratista
+            };
+            todosLosRegistros.push(nuevoRegistro);
+            guardarDatosLocales();
+            
+            mensajeDiv.innerHTML = `<div class="alert alert-warning">⚠️ Error de red. Registro guardado localmente: ${error.message}</div>`;
         } finally {
             submitBtn.disabled = false;
             submitBtn.textContent = 'Registrar';
