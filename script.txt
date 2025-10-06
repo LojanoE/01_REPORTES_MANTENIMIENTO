@@ -1,0 +1,47 @@
+function doPost(e) {
+  // Comprobar que la solicitud tiene parámetros
+  if (!e.parameter) {
+    return ContentService.createTextOutput(JSON.stringify({ "status": "error", "message": "No data received" })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  var sheet;
+  try {
+    // Obtener la hoja de cálculo activa y la hoja específica por su nombre.
+    // CAMBIA "Hoja 1" SI TU HOJA TIENE OTRO NOMBRE.
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    sheet = ss.getSheetByName("Hoja 1");
+
+    // Si la hoja no existe, intentar con la primera hoja disponible.
+    if (!sheet) {
+      sheet = ss.getSheets()[0];
+    }
+    
+    if (!sheet) {
+      throw new Error("No se encontró ninguna hoja en el documento.");
+    }
+
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ "status": "error", "message": "Error accessing spreadsheet: " + error.message })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // Extraer los datos del formulario
+  var fechaHora = e.parameter.fechaHora;
+  var responsable = e.parameter.responsable;
+  var tema = e.parameter.tema;
+  var actividades = e.parameter.actividades;
+  var personalEcsa = e.parameter.numeroEcsa;
+  var personalContratista = e.parameter.numeroContratista;
+
+  // Crear la fila para añadir a la hoja
+  var newRow = [fechaHora, responsable, tema, actividades, personalEcsa, personalContratista];
+
+  // Añadir la nueva fila
+  try {
+    sheet.appendRow(newRow);
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ "status": "error", "message": "Error appending row: " + error.message })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  // Devolver una respuesta de éxito
+  return ContentService.createTextOutput(JSON.stringify({ "status": "success", "message": "Row added successfully" })).setMimeType(ContentService.MimeType.JSON);
+}
