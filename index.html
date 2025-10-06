@@ -42,54 +42,84 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = (now.getMonth() + 1).toString().padStart(2, '0');
-            const day = now.getDate().toString().padStart(2, '0');
-            const hours = now.getHours().toString().padStart(2, '0');
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-            document.getElementById('fechaHora').value = formattedDateTime;
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('fechaHora').value = `${year}-${month}-${day}T${hours}:${minutes}`;
 
-            // Manejar el envío del formulario
-            document.getElementById('mantenimientoForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
+    const form = document.getElementById('mantenimientoForm');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const mensajeDiv = document.getElementById('mensaje');
 
-                const formData = new FormData(this);
-                const data = Object.fromEntries(formData);
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
 
-                const mensajeDiv = document.getElementById('mensaje');
-                mensajeDiv.innerHTML = '<div class="alert alert-info">Enviando...</div>';
+        // Deshabilitar botón y mostrar "Enviando..."
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Enviando...';
+        mensajeDiv.innerHTML = '';
 
-                try {
-                    // 🔴 Reemplaza esta URL con la de TU Google Apps Script
-                    const scriptURL = 'https://script.google.com/macros/s/AKfycbxggfLBiUdF6PFBvIiWBBmL9KxKZOBr8IXDGBPSxG_RVUoIM19ybkTIEfSsLgW-5m84/exec';
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData);
 
-                    const response = await fetch(scriptURL, {
-                        method: 'POST',
-                        body: new URLSearchParams(data),
-                        mode: 'no-cors' // Necesario para evitar errores CORS (aunque limita la respuesta)
-                    });
+        try {
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbxggfLBiUdF6PFBvIiWBBmL9KxKZOBr8IXDGBPSxG_RVUoIM19ybkTIEfSsLgW-5m84/exec';
 
-                    // Debido a 'no-cors', no puedes leer la respuesta, pero si no hay error, asumimos éxito
-                    mensajeDiv.innerHTML = '<div class="alert alert-success">¡Registro enviado con éxito!</div>';
-                    document.getElementById('mantenimientoForm').reset();
-                    // Restablecer fecha/hora actual
-                    const now = new Date();
-                    const year = now.getFullYear();
-                    const month = (now.getMonth() + 1).toString().padStart(2, '0');
-                    const day = now.getDate().toString().padStart(2, '0');
-                    const hours = now.getHours().toString().padStart(2, '0');
-                    const minutes = now.getMinutes().toString().padStart(2, '0');
-                    document.getElementById('fechaHora').value = `${year}-${month}-${day}T${hours}:${minutes}`;
-                } catch (error) {
-                    console.error('Error:', error);
-                    mensajeDiv.innerHTML = '<div class="alert alert-danger">Hubo un error al enviar el registro.</div>';
-                }
+            const response = await fetch(scriptURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams(data),
             });
-        });
-    </script>
-</body>
-</html>
+
+            const result = await response.text();
+
+            if (response.ok) {
+                // ✅ ÉXITO
+                mensajeDiv.innerHTML = `
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <strong>✅ ¡Registro completado!</strong> Los datos han sido guardados correctamente.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                `;
+                form.reset();
+                // Restablecer fecha/hora actual
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                document.getElementById('fechaHora').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+            } else {
+                // ❌ ERROR DEL SERVIDOR
+                mensajeDiv.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>❌ Error:</strong> El servidor respondió: ${result}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            // 🌐 ERROR DE RED
+            console.error('Error de red:', error);
+            mensajeDiv.innerHTML = `
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <strong>⚠️ No se pudo conectar.</strong> Verifica tu conexión a internet e intenta nuevamente.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                </div>
+            `;
+        } finally {
+            // Siempre reactivar el botón
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Registrar';
+        }
+    });
+});
+</script>
