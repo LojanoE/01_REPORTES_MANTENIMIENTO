@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- SheetJS (xlsx) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <link href="styles.css" rel="stylesheet">
+    <link href="styles.css?v=1.0.2" rel="stylesheet">
     <!-- Estilos personalizados -->
     <style>
         .table-container { max-height: 400px; overflow-y: auto; }
@@ -72,15 +72,15 @@
                     </div>
                     <div class="mb-3">
                         <label for="responsable" class="form-label">Responsable</label>
-                        <input type="text" class="form-control sys-select" id="responsable" name="responsable" required>
+                        <input type="text" class="form-control sys-select" id="responsable" name="responsable" style="text-transform: uppercase;" required>
                     </div>
                     <div class="mb-3">
                         <label for="frente" class="form-label">Frente de Trabajo</label>
-                        <input type="text" class="form-control sys-select" id="frente" name="frente" required>
+                        <input type="text" class="form-control sys-select" id="frente" name="frente" placeholder="Ej: DRT, DRQ, LABORATORIO, PISCINA A, PISCINA B" style="text-transform: uppercase;" required>
                     </div>
                     <div class="mb-3">
                         <label for="tema" class="form-label">Tema / Asunto</label>
-                        <input type="text" class="form-control sys-select" id="tema" name="tema" required>
+                        <input type="text" class="form-control sys-select" id="tema" name="tema" style="text-transform: uppercase;" required>
                     </div>
                     <div class="mb-3">
                         <label for="actividades" class="form-label">Actividades Realizadas</label>
@@ -162,6 +162,6 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Tu script externo -->
-    <script src="app.js"></script>
+    <script src="app.js?v=1.0.2"></script>
 </body>
 </html>

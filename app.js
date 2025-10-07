@@ -416,11 +416,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             // Crear objeto con los campos esperados por Google Apps Script
+            // Convertir a mayúsculas los campos específicos
             const params = new URLSearchParams({
                 'fechaHora': data.fechaHora,
-                'responsable': data.responsable,
-                'tema': data.tema,
-                'frente': data.frente,  // Agregar el campo 'frente' al envío
+                'responsable': data.responsable.toUpperCase(),
+                'tema': data.tema.toUpperCase(),
+                'frente': data.frente.toUpperCase(),  // Agregar el campo 'frente' al envío
                 'actividades': data.actividades,
                 'numeroEcsa': data.numeroEcsa,
                 'numeroContratista': data.numeroContratista
@@ -448,9 +449,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 const nuevoRegistro = {
                     'Fecha y Hora': data.fechaHora,
-                    'Responsable': data.responsable,
-                    'Tema / Asunto': data.tema,
-                    'Frente de Trabajo': data.frente,
+                    'Responsable': data.responsable.toUpperCase(),
+                    'Tema / Asunto': data.tema.toUpperCase(),
+                    'Frente de Trabajo': data.frente.toUpperCase(),
                     'Actividades Realizadas': data.actividades,
                     'Nº Personas ECSA': data.numeroEcsa,
                     'Nº Personas Contratista': data.numeroContratista
@@ -478,9 +479,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Agregar el registro a la lista local de todas formas
                 const nuevoRegistro = {
                     'Fecha y Hora': data.fechaHora,
-                    'Responsable': data.responsable,
-                    'Tema / Asunto': data.tema,
-                    'Frente de Trabajo': data.frente,
+                    'Responsable': data.responsable.toUpperCase(),
+                    'Tema / Asunto': data.tema.toUpperCase(),
+                    'Frente de Trabajo': data.frente.toUpperCase(),
                     'Actividades Realizadas': data.actividades,
                     'Nº Personas ECSA': data.numeroEcsa,
                     'Nº Personas Contratista': data.numeroContratista
@@ -507,9 +508,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const nuevoRegistro = {
                 'Fecha y Hora': data.fechaHora,
-                'Responsable': data.responsable,
-                'Tema / Asunto': data.tema,
-                'Frente de Trabajo': data.frente,
+                'Responsable': data.responsable.toUpperCase(),
+                'Tema / Asunto': data.tema.toUpperCase(),
+                'Frente de Trabajo': data.frente.toUpperCase(),
                 'Actividades Realizadas': data.actividades,
                 'Nº Personas ECSA': data.numeroEcsa,
                 'Nº Personas Contratista': data.numeroContratista
