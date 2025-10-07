@@ -415,8 +415,16 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Datos a enviar:', data); // Debug log
 
         try {
-            // Convert form data to URLSearchParams for Google Apps Script
-            const params = new URLSearchParams(data);
+            // Crear objeto con los campos esperados por Google Apps Script
+            const params = new URLSearchParams({
+                'fechaHora': data.fechaHora,
+                'responsable': data.responsable,
+                'tema': data.tema,
+                'frente': data.frente,  // Agregar el campo 'frente' al envío
+                'actividades': data.actividades,
+                'numeroEcsa': data.numeroEcsa,
+                'numeroContratista': data.numeroContratista
+            });
             
             console.log('Parámetros a enviar:', params.toString()); // Debug log
             
