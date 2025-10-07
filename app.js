@@ -648,9 +648,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const minutes = String(now.getMinutes()).padStart(2, '0');
     document.getElementById('fechaHora').value = `${year}-${month}-${day}T${hours}:${minutes}`;
 
+    // Función para establecer fechas diarias por defecto
+    function establecerFechasDiarias() {
+        const hoy = new Date();
+        const fechaFormateada = hoy.toISOString().split('T')[0];
+        document.getElementById('fechaDesde').value = fechaFormateada;
+        document.getElementById('fechaHasta').value = fechaFormateada;
+    }
+
     // Eventos de la pestaña de consulta
-    document.getElementById('consulta-tab').addEventListener('click', cargarDatos);
-    document.getElementById('btnCargar').addEventListener('click', cargarDatos);
+    document.getElementById('consulta-tab').addEventListener('click', function() {
+        establecerFechasDiarias();
+        cargarDatos();
+    });
+    document.getElementById('btnCargar').addEventListener('click', function() {
+        // Si no hay fechas seleccionadas, usar el día actual como predeterminado
+        if (!document.getElementById('fechaDesde').value && !document.getElementById('fechaHasta').value) {
+            establecerFechasDiarias();
+        }
+        cargarDatos();
+    });
     document.getElementById('btnExportar').addEventListener('click', exportarAExcel);
 
     ['filtroResponsable', 'filtroTema', 'filtroFrente'].forEach(id => {
