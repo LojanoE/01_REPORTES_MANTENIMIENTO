@@ -22,10 +22,7 @@ html, body { background:#0b1220; color:#e5e7eb; }
 /* Logos en la tarjeta (pantalla) */
 .kpi-card{ position:relative; }
 .kpi-card .logo-bar{
-  position:absolute;
-  top:10px; left:14px; right:14px;
   display:flex; align-items:flex-start; justify-content:space-between;
-  pointer-events:none;
 }
 .rdv-logo{ height:72px; width:auto; filter: drop-shadow(0 1px 1px rgba(0,0,0,.35)); }
 @media (min-width:768px){ .rdv-logo{ height:96px; } }
@@ -182,15 +179,15 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   .kpi-card .logo-bar {
     position: static !important;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     gap: 10px;
     margin: 2px 0 6px 0;
   }
   .kpi-card .logo-bar .rdv-logo {
     height: 30px !important;
-    max-width: 42%;
+    max-width: 30%;
     width: auto;
     object-fit: contain;
   }
@@ -205,13 +202,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   #liveCodigo { font-size: clamp(0.9rem, 4.8vw, 1.05rem) !important; line-height:1.08; }
 }
 
-/* Very small phones ≤360px: stack logos vertically to guarantee no overlap */
-@media (max-width: 360px) {
-  .kpi-card .logo-bar { flex-direction: column; gap: 6px; }
-  .kpi-card .logo-bar .rdv-logo { height: 28px !important; max-width: 70%; }
-  .bilingual-title .line1 { font-size: 0.7rem !important; }
-  .bilingual-title .line2 { font-size: 0.66rem !important; }
-}
+
 
 
 /* ==== TABLET & SMALL LAPTOP SAFE ZONE (<=900px) ==== */
