@@ -43,6 +43,10 @@
                         <input type="text" class="form-control" id="responsable" name="responsable" required>
                     </div>
                     <div class="mb-3">
+                        <label for="frente" class="form-label">Frente de Trabajo</label>
+                        <input type="text" class="form-control" id="frente" name="frente" required>
+                    </div>
+                    <div class="mb-3">
                         <label for="tema" class="form-label">Tema / Asunto</label>
                         <input type="text" class="form-control" id="tema" name="tema" required>
                     </div>
@@ -66,19 +70,25 @@
             <!-- Pestaña 2: Consulta -->
             <div class="tab-pane fade" id="consulta" role="tabpanel">
                 <div class="row mb-3">
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label for="filtroResponsable" class="form-label">Responsable</label>
                         <input type="text" class="form-control" id="filtroResponsable" placeholder="Nombre...">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label for="filtroTema" class="form-label">Tema / Asunto</label>
                         <input type="text" class="form-control" id="filtroTema" placeholder="Tema...">
                     </div>
-                    <div class="col-md-2">
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="filtroFrente" class="form-label">Frente de Trabajo</label>
+                        <input type="text" class="form-control" id="filtroFrente" placeholder="Frente...">
+                    </div>
+                    <div class="col-md-3">
                         <label for="fechaDesde" class="form-label">Desde</label>
                         <input type="date" class="form-control" id="fechaDesde">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label for="fechaHasta" class="form-label">Hasta</label>
                         <input type="date" class="form-control" id="fechaHasta">
                     </div>
@@ -101,6 +111,7 @@
                             <tr>
                                 <th>Fecha y Hora</th>
                                 <th>Responsable</th>
+                                <th>Frente de Trabajo</th>
                                 <th>Tema / Asunto</th>
                                 <th>Actividades Realizadas</th>
                                 <th>Nº Personas ECSA</th>

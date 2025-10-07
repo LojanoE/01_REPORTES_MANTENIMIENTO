@@ -51,7 +51,7 @@ function cargarDatosLocales() {
 function mostrarRegistros(registros) {
     const cuerpoTabla = document.getElementById('cuerpoTabla');
     if (!registros || registros.length === 0) {
-        cuerpoTabla.innerHTML = '<tr><td colspan="6" class="text-center">No hay registros</td></tr>';
+        cuerpoTabla.innerHTML = '<tr><td colspan="7" class="text-center">No hay registros</td></tr>';
         return;
     }
 
@@ -78,6 +78,12 @@ function mostrarRegistros(registros) {
             reg['asunto'] || 
             reg['subject'] || 
             reg[2] || '';
+
+        const frente = 
+            reg['Frente de Trabajo'] || 
+            reg['frente'] || 
+            reg['frente_de_trabajo'] || 
+            reg[6] || '';
             
         const actividades = 
             reg['Actividades Realizadas'] || 
@@ -105,6 +111,7 @@ function mostrarRegistros(registros) {
                 <td>${fecha}</td>
                 <td>${responsable}</td>
                 <td>${tema}</td>
+                <td>${frente}</td>
                 <td>${actividades}</td>
                 <td>${numeroEcsa}</td>
                 <td>${numeroContratista}</td>
@@ -168,6 +175,7 @@ function actualizarGrafico(registros) {
 function aplicarFiltros() {
     const filtroResp = document.getElementById('filtroResponsable').value.toLowerCase().trim();
     const filtroTema = document.getElementById('filtroTema').value.toLowerCase().trim();
+    const filtroFrente = document.getElementById('filtroFrente').value.toLowerCase().trim();
     const fechaDesde = document.getElementById('fechaDesde').value;
     const fechaHasta = document.getElementById('fechaHasta').value;
 
@@ -188,10 +196,18 @@ function aplicarFiltros() {
             reg['subject'] || 
             reg[2] || ''
         ).toLowerCase();
+
+        const frente = (
+            reg['Frente de Trabajo'] || 
+            reg['frente'] || 
+            reg['frente_de_trabajo'] || 
+            reg[6] || ''
+        ).toLowerCase();
         
         // Aplicar filtros si hay texto en los campos
         if (filtroResp && !responsable.includes(filtroResp)) return false;
         if (filtroTema && !tema.includes(filtroTema)) return false;
+        if (filtroFrente && !frente.includes(filtroFrente)) return false;
 
         // Filtrar por fechas si están especificadas
         const fechaRegistro = extraerFecha(
@@ -242,7 +258,8 @@ async function cargarDatos() {
                                 'Tema / Asunto': row[2] || '',
                                 'Actividades Realizadas': row[3] || '',
                                 'Nº Personas ECSA': row[4] || 0,
-                                'Nº Personas Contratista': row[5] || 0
+                                'Nº Personas Contratista': row[5] || 0,
+                                'Frente de Trabajo': row[6] || ''
                             };
                         }
                         return row;
@@ -319,6 +336,11 @@ function exportarAExcel() {
             reg['asunto'] || 
             reg['subject'] || 
             reg[2] || '',
+        'Frente de Trabajo':
+            reg['Frente de Trabajo'] ||
+            reg['frente'] ||
+            reg['frente_de_trabajo'] ||
+            reg[6] || '',
         'Actividades Realizadas': 
             reg['Actividades Realizadas'] || 
             reg['actividades'] || 
@@ -368,7 +390,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btnCargar').addEventListener('click', cargarDatos);
     document.getElementById('btnExportar').addEventListener('click', exportarAExcel);
 
-    ['filtroResponsable', 'filtroTema'].forEach(id => {
+    ['filtroResponsable', 'filtroTema', 'filtroFrente'].forEach(id => {
         document.getElementById(id).addEventListener('input', aplicarFiltros);
     });
 
@@ -416,11 +438,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
                     </div>
                 `;
-                // Agregar el registro a la lista local
                 const nuevoRegistro = {
                     'Fecha y Hora': data.fechaHora,
                     'Responsable': data.responsable,
                     'Tema / Asunto': data.tema,
+                    'Frente de Trabajo': data.frente,
                     'Actividades Realizadas': data.actividades,
                     'Nº Personas ECSA': data.numeroEcsa,
                     'Nº Personas Contratista': data.numeroContratista
@@ -450,6 +472,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Fecha y Hora': data.fechaHora,
                     'Responsable': data.responsable,
                     'Tema / Asunto': data.tema,
+                    'Frente de Trabajo': data.frente,
                     'Actividades Realizadas': data.actividades,
                     'Nº Personas ECSA': data.numeroEcsa,
                     'Nº Personas Contratista': data.numeroContratista
@@ -474,6 +497,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Fecha y Hora': data.fechaHora,
                 'Responsable': data.responsable,
                 'Tema / Asunto': data.tema,
+                'Frente de Trabajo': data.frente,
                 'Actividades Realizadas': data.actividades,
                 'Nº Personas ECSA': data.numeroEcsa,
                 'Nº Personas Contratista': data.numeroContratista
