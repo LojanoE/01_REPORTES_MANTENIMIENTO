@@ -230,7 +230,7 @@ function aplicarFiltros() {
 
 async function cargarDatos() {
     const mensajeDiv = document.getElementById('mensajeConsulta');
-    mensajeDiv.innerHTML = '<div class="alert alert-info">Cargando datos...</div>';
+    mensajeDiv.innerHTML = '<div class="alert alert-info"><i class="bi bi-arrow-repeat me-2"></i>Cargando datos...</div>';
 
     try {
         // Intentar cargar desde Google Apps Script
@@ -277,9 +277,9 @@ async function cargarDatos() {
             // Mostrar mensaje si hay datos
             if (registrosProcesados.length > 0) {
                 console.log('Primer registro recibido:', registrosProcesados[0]); // Debug log
-                mensajeDiv.innerHTML = `<div class="alert alert-success">✅ Cargados ${registrosProcesados.length} registros</div>`;
+                mensajeDiv.innerHTML = `<div class="alert alert-success"><i class="bi bi-check-circle me-2"></i>✅ Cargados ${registrosProcesados.length} registros</div>`;
             } else {
-                mensajeDiv.innerHTML = '<div class="alert alert-info">No hay registros en la hoja de cálculo</div>';
+                mensajeDiv.innerHTML = '<div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>No hay registros en la hoja de cálculo</div>';
             }
         } else {
             throw new Error(data.error || 'Formato de datos incorrecto');
@@ -290,10 +290,10 @@ async function cargarDatos() {
         const datosLocales = cargarDatosLocales();
         if (datosLocales.length > 0) {
             todosLosRegistros = datosLocales;
-            mensajeDiv.innerHTML = `<div class="alert alert-warning">Cargando ${datosLocales.length} registros locales. No se pudo conectar con Google Apps Script.</div>`;
+            mensajeDiv.innerHTML = `<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>Cargando ${datosLocales.length} registros locales. No se pudo conectar con Google Apps Script.</div>`;
         } else {
             // Si tampoco hay datos locales, mostrar mensaje de error
-            mensajeDiv.innerHTML = `<div class="alert alert-danger">Error al cargar los datos: ${error.message}. No hay datos locales disponibles.</div>`;
+            mensajeDiv.innerHTML = `<div class="alert alert-danger"><i class="bi bi-x-circle me-2"></i>Error al cargar los datos: ${error.message}. No hay datos locales disponibles.</div>`;
             todosLosRegistros = [];
         }
     }
@@ -368,7 +368,7 @@ function exportarAExcel() {
     
     // Mostrar mensaje de éxito
     const mensajeDiv = document.getElementById('mensajeConsulta');
-    mensajeDiv.innerHTML = '<div class="alert alert-success">✅ Datos exportados exitosamente a Excel.</div>';
+    mensajeDiv.innerHTML = '<div class="alert alert-success"><i class="bi bi-file-earmark-arrow-down me-2"></i>✅ Datos exportados exitosamente a Excel.</div>';
     setTimeout(() => {
         mensajeDiv.innerHTML = '';
     }, 3000);
@@ -480,6 +480,163 @@ function cerrarModal() {
     }
 }
 
+// ===== FUNCIONALIDAD DE TRADUCCIÓN =====
+
+// Traducciones de texto
+const traducciones = {
+    'es': {
+        'SISTEMA DE GESTIÓN DE LA CALIDAD': 'SISTEMA DE GESTIÓN DE LA CALIDAD',
+        '质量管理体系': '质量管理体系',
+        'DEPARTAMENTO DE GESTIÓN DE DEPÓSITOS DE RELAVES': 'DEPARTAMENTO DE GESTIÓN DE DEPÓSITOS DE RELAVES',
+        '尾矿库管理部': '尾矿库管理部',
+        'Sistema de Mantenimiento': 'Sistema de Mantenimiento',
+        '维护系统': '维护系统',
+        'Fecha y Hora': 'Fecha y Hora',
+        '日期时间': '日期时间',
+        'Responsable': 'Responsable',
+        '负责人': '负责人',
+        'Frente de Trabajo': 'Frente de Trabajo',
+        '工作面': '工作面',
+        'Tema / Asunto': 'Tema / Asunto',
+        '主题 / 事项': '主题 / 事项',
+        'Actividades Realizadas': 'Actividades Realizadas',
+        '已执行活动': '已执行活动',
+        'Nº Personas ECSA': 'Nº Personas ECSA',
+        'ECSA人数': 'ECSA人数',
+        'Nº Personas Contratista': 'Nº Personas Contratista',
+        '承包商人数': '承包商人数',
+        'Registrar': 'Registrar',
+        '登记': '登记',
+        'Registro': 'Registro',
+        '登记': '登记',
+        'Consulta, Filtro y Gráfico': 'Consulta, Filtro y Gráfico',
+        '查询、筛选和图表': '查询、筛选和图表',
+        'Responsable': 'Responsable',
+        '负责人': '负责人',
+        'Tema / Asunto': 'Tema / Asunto',
+        '主题 / 事项': '主题 / 事项',
+        'Frente de Trabajo': 'Frente de Trabajo',
+        '工作面': '工作面',
+        'Fecha y Hora': 'Fecha y Hora',
+        '日期时间': '日期时间',
+        'Actividades Realizadas': 'Actividades Realizadas',
+        '已执行活动': '已执行活动',
+        'Nº Personas ECSA': 'Nº Personas ECSA',
+        'ECSA人数': 'ECSA人数',
+        'Nº Personas Contratista': 'Nº Personas Contratista',
+        '承包商人数': '承包商人数',
+        'Cargar / Actualizar': 'Cargar / Actualizar',
+        '加载 / 更新': '加载 / 更新',
+        'Exportar a Excel': 'Exportar a Excel',
+        '导出到Excel': '导出到Excel',
+        'Personas ECSA': 'Personas ECSA',
+        'ECSA人员': 'ECSA人员',
+        'Personas Contratista': 'Personas Contratista',
+        '承包商人员': '承包商人员',
+        'Número de Personas': 'Número de Personas',
+        '人数': '人数',
+        'Ej: DRT, DRQ, LABORATORIO, PISCINA A, PISCINA B': '示例: DRT, DRQ, 实验室, 池A, 池B',
+        '✅ ¡Registro completado!': '✅ 登记完成！',
+        'Los datos han sido guardados correctamente.': '数据已成功保存。',
+        '⚠️ Registro guardado localmente': '⚠️ 数据本地保存',
+        'Error al enviar a Google Apps Script.': '发送到 Google Apps Script 时出错。',
+        '⚠️ Error de red': '⚠️ 网络错误',
+    },
+    'cn': {
+        'SISTEMA DE GESTIÓN DE LA CALIDAD': '质量管理体系',
+        '质量管理体系': 'SISTEMA DE GESTIÓN DE LA CALIDAD',
+        'DEPARTAMENTO DE GESTIÓN DE DEPÓSITOS DE RELAVES': '尾矿库管理部',
+        '尾矿库管理部': 'DEPARTAMENTO DE GESTIÓN DE DEPÓSITOS DE RELAVES',
+        'Sistema de Mantenimiento': '维护系统',
+        '维护系统': 'Sistema de Mantenimiento',
+        'Fecha y Hora': '日期时间',
+        '日期时间': 'Fecha y Hora',
+        'Responsable': '负责人',
+        '负责人': 'Responsable',
+        'Frente de Trabajo': '工作面',
+        '工作面': 'Frente de Trabajo',
+        'Tema / Asunto': '主题 / 事项',
+        '主题 / 事项': 'Tema / Asunto',
+        'Actividades Realizadas': '已执行活动',
+        '已执行活动': 'Actividades Realizadas',
+        'Nº Personas ECSA': 'ECSA人数',
+        'ECSA人数': 'Nº Personas ECSA',
+        'Nº Personas Contratista': '承包商人数',
+        '承包商人数': 'Nº Personas Contratista',
+        'Registrar': '登记',
+        '登记': 'Registrar',
+        'Registro': '登记',
+        '登记': 'Registro',
+        'Consulta, Filtro y Gráfico': '查询、筛选和图表',
+        '查询、筛选和图表': 'Consulta, Filtro y Gráfico',
+        'Responsable': '负责人',
+        '负责人': 'Responsable',
+        'Tema / Asunto': '主题 / 事项',
+        '主题 / 事项': 'Tema / Asunto',
+        'Frente de Trabajo': '工作面',
+        '工作面': 'Frente de Trabajo',
+        'Fecha y Hora': '日期时间',
+        '日期时间': 'Fecha y Hora',
+        'Actividades Realizadas': '已执行活动',
+        '已执行活动': 'Actividades Realizadas',
+        'Nº Personas ECSA': 'ECSA人数',
+        'ECSA人数': 'Nº Personas ECSA',
+        'Nº Personas Contratista': '承包商人数',
+        '承包商人数': 'Nº Personas Contratista',
+        'Cargar / Actualizar': '加载 / 更新',
+        '加载 / 更新': 'Cargar / Actualizar',
+        'Exportar a Excel': '导出到Excel',
+        '导出到Excel': 'Exportar a Excel',
+        'Personas ECSA': 'ECSA人员',
+        'ECSA人员': 'Personas ECSA',
+        'Personas Contratista': '承包商人员',
+        '承包商人员': 'Personas Contratista',
+        'Número de Personas': '人数',
+        '人数': 'Número de Personas',
+        'Ej: DRT, DRQ, LABORATORIO, PISCINA A, PISCINA B': '示例: DRT, DRQ, 实验室, 池A, 池B',
+        '✅ ¡Registro completado!': '✅ 登记完成！',
+        'Los datos han sido guardados correctamente.': '数据已成功保存。',
+        '⚠️ Registro guardado localmente': '⚠️ 数据本地保存',
+        'Error al enviar a Google Apps Script.': '发送到 Google Apps Script 时出错。',
+        '⚠️ Error de red': '⚠️ 网络错误',
+    }
+};
+
+let idiomaActual = 'es';
+
+// Función para cambiar el idioma
+function cambiarIdioma() {
+    // Alternar entre idiomas
+    idiomaActual = idiomaActual === 'es' ? 'cn' : 'es';
+    
+    // Actualizar el icono del botón
+    const icono = document.getElementById('lang-icon');
+    if (icono) {
+        icono.textContent = idiomaActual === 'es' ? '🇨🇳' : '🇪🇸';
+    }
+    
+    // Traducir todos los elementos de texto
+    const elementos = document.querySelectorAll('div, span, label, th, h1, h2, h3, h4, h5, h6, button, p, a, strong, small');
+    elementos.forEach(elemento => {
+        if (elemento.children.length === 0 && elemento.textContent.trim() !== '') {
+            // Solo traducir si el elemento no tiene hijos (no es un contenedor)
+            const textoOriginal = elemento.textContent.trim();
+            if (traducciones[idiomaActual][textoOriginal]) {
+                elemento.textContent = traducciones[idiomaActual][textoOriginal];
+            }
+        }
+    });
+    
+    // Actualizar también placeholders
+    const inputs = document.querySelectorAll('input[placeholder], textarea[placeholder]');
+    inputs.forEach(input => {
+        const placeholderOriginal = input.getAttribute('placeholder');
+        if (placeholderOriginal && traducciones[idiomaActual][placeholderOriginal]) {
+            input.setAttribute('placeholder', traducciones[idiomaActual][placeholderOriginal]);
+        }
+    });
+}
+
 // ===== INICIALIZACIÓN =====
 document.addEventListener('DOMContentLoaded', function() {
     // Establecer fecha actual en el formulario
@@ -504,10 +661,34 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById(id).addEventListener('change', aplicarFiltros);
     });
 
+    // Evento para el botón de cambio de idioma
+    const btnToggleLang = document.getElementById('btn-toggle-lang');
+    if (btnToggleLang) {
+        btnToggleLang.addEventListener('click', cambiarIdioma);
+    }
+
+    // Evento para el botón de valores comunes
+    function llenarValoresComunes(numEcsa, numContratista) {
+        document.getElementById('numeroEcsa').value = numEcsa;
+        document.getElementById('numeroContratista').value = numContratista;
+    }
+
     // Evento del formulario de registro
     const form = document.getElementById('mantenimientoForm');
     const submitBtn = form.querySelector('button[type="submit"]');
     const mensajeDiv = document.getElementById('mensajeRegistro');
+
+    // Funciones para manejar el campo select de frente con opción de entrada manual
+    document.getElementById('frenteSelect').addEventListener('change', function() {
+        const frenteManual = document.getElementById('frenteManual');
+        if (this.value === 'OTRO') {
+            frenteManual.style.display = 'block';
+            frenteManual.required = true;
+        } else {
+            frenteManual.style.display = 'none';
+            frenteManual.required = false;
+        }
+    });
 
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -518,20 +699,30 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData(form);
         const data = Object.fromEntries(formData);
         
-        console.log('Datos a enviar:', data); // Debug log
+        // Obtener valor real del frente considerando el campo select y manual
+        let frente = '';
+        if (data.frenteSelect === 'OTRO' && data.frenteManual) {
+            frente = data.frenteManual.toUpperCase();
+        } else {
+            frente = data.frenteSelect.toUpperCase();
+        }
+        
+        // Datos para envío
+        const datosParaEnvio = {
+            fechaHora: data.fechaHora,
+            responsable: data.responsable.toUpperCase(),
+            tema: data.tema.toUpperCase(),
+            frente: frente,
+            actividades: data.actividades,
+            numeroEcsa: data.numeroEcsa,
+            numeroContratista: data.numeroContratista
+        };
+        
+        console.log('Datos a enviar:', datosParaEnvio); // Debug log
 
         try {
             // Crear objeto con los campos esperados por Google Apps Script
-            // Convertir a mayúsculas los campos específicos
-            const params = new URLSearchParams({
-                'fechaHora': data.fechaHora,
-                'responsable': data.responsable.toUpperCase(),
-                'tema': data.tema.toUpperCase(),
-                'frente': data.frente.toUpperCase(),  // Agregar el campo 'frente' al envío
-                'actividades': data.actividades,
-                'numeroEcsa': data.numeroEcsa,
-                'numeroContratista': data.numeroContratista
-            });
+            const params = new URLSearchParams(datosParaEnvio);
             
             console.log('Parámetros a enviar:', params.toString()); // Debug log
             
@@ -549,14 +740,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (response.ok) {
                 // Mostrar mensaje de éxito en una ventana modal más vistosa
                 mostrarModalExito("✅ ¡Registro completado!", "Los datos han sido guardados correctamente.");
+                
                 const nuevoRegistro = {
-                    'Fecha y Hora': data.fechaHora,
-                    'Responsable': data.responsable.toUpperCase(),
-                    'Tema / Asunto': data.tema.toUpperCase(),
-                    'Frente de Trabajo': data.frente.toUpperCase(),
-                    'Actividades Realizadas': data.actividades,
-                    'Nº Personas ECSA': data.numeroEcsa,
-                    'Nº Personas Contratista': data.numeroContratista
+                    'Fecha y Hora': datosParaEnvio.fechaHora,
+                    'Responsable': datosParaEnvio.responsable,
+                    'Tema / Asunto': datosParaEnvio.tema,
+                    'Frente de Trabajo': datosParaEnvio.frente,
+                    'Actividades Realizadas': datosParaEnvio.actividades,
+                    'Nº Personas ECSA': datosParaEnvio.numeroEcsa,
+                    'Nº Personas Contratista': datosParaEnvio.numeroContratista
                 };
                 todosLosRegistros.push(nuevoRegistro);
                 guardarDatosLocales();
@@ -567,6 +759,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 form.reset();
+                // Mostrar campo manual del frente como oculto después del reset
+                document.getElementById('frenteManual').style.display = 'none';
+                
                 const now = new Date();
                 const year = now.getFullYear();
                 const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -580,13 +775,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Agregar el registro a la lista local de todas formas
                 const nuevoRegistro = {
-                    'Fecha y Hora': data.fechaHora,
-                    'Responsable': data.responsable.toUpperCase(),
-                    'Tema / Asunto': data.tema.toUpperCase(),
-                    'Frente de Trabajo': data.frente.toUpperCase(),
-                    'Actividades Realizadas': data.actividades,
-                    'Nº Personas ECSA': data.numeroEcsa,
-                    'Nº Personas Contratista': data.numeroContratista
+                    'Fecha y Hora': datosParaEnvio.fechaHora,
+                    'Responsable': datosParaEnvio.responsable,
+                    'Tema / Asunto': datosParaEnvio.tema,
+                    'Frente de Trabajo': datosParaEnvio.frente,
+                    'Actividades Realizadas': datosParaEnvio.actividades,
+                    'Nº Personas ECSA': datosParaEnvio.numeroEcsa,
+                    'Nº Personas Contratista': datosParaEnvio.numeroContratista
                 };
                 todosLosRegistros.push(nuevoRegistro);
                 guardarDatosLocales();
@@ -601,17 +796,14 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Error:', error);
             // En caso de error de red, guardar localmente
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData);
-            
             const nuevoRegistro = {
-                'Fecha y Hora': data.fechaHora,
-                'Responsable': data.responsable.toUpperCase(),
-                'Tema / Asunto': data.tema.toUpperCase(),
-                'Frente de Trabajo': data.frente.toUpperCase(),
-                'Actividades Realizadas': data.actividades,
-                'Nº Personas ECSA': data.numeroEcsa,
-                'Nº Personas Contratista': data.numeroContratista
+                'Fecha y Hora': datosParaEnvio.fechaHora,
+                'Responsable': datosParaEnvio.responsable,
+                'Tema / Asunto': datosParaEnvio.tema,
+                'Frente de Trabajo': datosParaEnvio.frente,
+                'Actividades Realizadas': datosParaEnvio.actividades,
+                'Nº Personas ECSA': datosParaEnvio.numeroEcsa,
+                'Nº Personas Contratista': datosParaEnvio.numeroContratista
             };
             todosLosRegistros.push(nuevoRegistro);
             guardarDatosLocales();

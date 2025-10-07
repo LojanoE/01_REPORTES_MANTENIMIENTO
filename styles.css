@@ -661,6 +661,34 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   filter: invert(1) !important;  /* Hacer que el botón de cierre sea visible en fondos oscuros */
 }
 
+/* Estilos para mensajes de consulta más visibles */
+#mensajeConsulta .alert {
+  background: rgba(255,255,255,0.15) !important;
+  border: 1px solid rgba(255,255,255,.2) !important;
+  border-left: 4px solid #0ea5e9 !important;  /* Linea izquierda azul para destacar */
+  color: #e5e7eb !important;
+  border-radius: 0.5rem !important;
+  padding: 12px 15px !important;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06) !important;
+  margin: 10px 0 !important;
+}
+
+#mensajeConsulta .alert-success {
+  border-left-color: #16a34a !important;  /* Verde para éxito */
+}
+
+#mensajeConsulta .alert-warning {
+  border-left-color: #f59e0b !important;  /* Amarillo para advertencia */
+}
+
+#mensajeConsulta .alert-danger {
+  border-left-color: #dc2626 !important;   /* Rojo para error */
+}
+
+#mensajeConsulta .alert-info {
+  border-left-color: #0ea5e9 !important;   /* Azul para información */
+}
+
 @media print {
   #chatbot-container, #chatbot-toggler {
     display: none !important;
