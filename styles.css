@@ -1,0 +1,495 @@
+
+:root { --ink:#0f172a; --muted:#334155; --brand:#0ea5e9; --ok:#16a34a; --warn:#f59e0b; --crit:#ef4444; }
+html, body { background:#0b1220; color:#e5e7eb; }
+.card { background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03)); border:1px solid rgba(255,255,255,.08); border-radius: 1rem; }
+.chip { border:1px solid rgba(255,255,255,.12); border-radius:9999px; padding:.15rem .6rem; font-size:.75rem; }
+.soft { box-shadow: 0 10px 30px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.06); }
+.grid-2 { display:grid; grid-template-columns: 1fr; gap:1rem; }
+@media(min-width:768px){ .grid-2{ grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); } }
+.sys-select { appearance:none; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:.5rem; padding:.4rem .6rem; width:100%; }
+.sys-note { background:rgba(255,255,255,.04); border:1px dashed rgba(255,255,255,.15); border-radius:.5rem; padding:.4rem .6rem; width:100%; }
+.thumb { aspect-ratio: 4/3; object-fit:cover; border-radius:.75rem; border:1px solid rgba(255,255,255,.12); background:#0a1020; }
+.btn { border-radius: .75rem; padding: .7rem 1rem; border:1px solid rgba(255,255,255,.16); }
+.btn-primary { background:linear-gradient(180deg, #22d3ee, #0ea5e9); color:#0b1220; font-weight:600; }
+.btn-ghost { background:transparent; }
+.btn-danger { background:linear-gradient(180deg, #fb7185, #ef4444); color:#fff; }
+.btn-highlight { background-color: #fbbf24; color: #000; } /* Yellow highlight color */
+.kpi { border: 1px solid rgba(255,255,255,.12); border-radius:.75rem; padding:.4rem .6rem; }
+.kbd { border:1px solid rgba(255,255,255,.2); border-radius:.4rem; padding:.1rem .35rem; font-size:.75rem; }
+.note { color:#cbd5e1; font-size:.85rem; }
+.sr-only { position:absolute; width:1px; height:1px; margin:-1px; clip:rect(0,0,0,0); overflow:hidden; }
+
+/* Logos en la tarjeta (pantalla) */
+.kpi-card{ position:relative; }
+.kpi-card .logo-bar{
+  position:absolute;
+  top:10px; left:14px; right:14px;
+  display:flex; align-items:flex-start; justify-content:space-between;
+  pointer-events:none;
+}
+.rdv-logo{ height:72px; width:auto; filter: drop-shadow(0 1px 1px rgba(0,0,0,.35)); }
+@media (min-width:768px){ .rdv-logo{ height:96px; } }
+
+/* Encabezado bilingüe (pantalla) */
+.bilingual-title{ text-align:center; line-height:1.2; color:#363844; }
+.kpi-card .bilingual-title{ margin-top:-14px; }
+@media (min-width:768px){ .kpi-card .bilingual-title{ margin-top:-22px; } }
+@media (min-width:1024px){ .kpi-card .bilingual-title{ margin-top:-26px; } }
+.bilingual-title .line1{ font-weight:800; font-size:1.125rem; letter-spacing:.02em; }
+.bilingual-title .line2{ font-weight:600; font-size:.95rem; opacity:.9; }
+.bilingual-title .line3 .es{ font-weight:800; font-size:1.05rem; }
+.bilingual-title .line3 .cn{ font-size:.95rem; margin-top:2px; }
+.bilingual-title .cn{ font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans SC', 'Microsoft YaHei', sans-serif; }
+.bilingual-title .sep{ height:1px; background:rgba(0, 0, 0, 0.35); margin:.35rem auto .45rem; width:96%; }
+
+/* Centrado del único KPI en la tarjeta */
+.kpi-center-single{ display:flex; justify-content:center; }
+.kpi-center-single .kpi{ text-align:center; min-width: min(100%, 460px); }
+/* Ajuste de altura para quedar al nivel de logos */
+.kpi-card .kpi-center-single{ margin-top:-14px; }
+@media (min-width:768px){ .kpi-card .kpi-center-single{ margin-top:-24px; } }
+@media (min-width:1024px){ .kpi-card .kpi-center-single{ margin-top:-28px; } }
+
+/* ======= PRINT (A4) ======= */
+@page { size: A4; margin: 12mm; }
+@media print {
+  body { background:#fff; color:#000; }
+  .no-print { display:none !important; }
+  #report { display:block !important; }
+  .print-only { display:block !important; }
+
+  #toast { display:none !important; }       /* evita el “recuadro” del aviso */
+  /* Encabezado de impresión con logos */
+  .rep-topbar{
+    display:grid;
+    grid-template-columns: 35mm 1fr 35mm;
+    align-items:center;
+    column-gap:8mm;
+    margin-bottom:6mm;
+  }
+  .rep-logo{ height:26mm; width:auto; object-fit:contain; }
+  .print-title{ color:#000; }
+  .print-title .line1{ font-weight:800; font-size:14pt; letter-spacing:.02em; }
+  .print-title .line2{ font-weight:600; font-size:10pt; }
+  .print-title .line3 .es{ font-weight:800; font-size:12pt; }
+  .print-title .line3 .cn{ font-size:10pt; margin-top:2px; }
+  .print-title .sep{ height:1px; background:#000; margin:3pt auto 4pt; width:96%; }
+
+  .print-grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+  .print-grid img { width:100%; height: 110mm; object-fit: contain; border:1px solid #010000; }
+  .rep-card { border:1px solid #000; border-radius: 6px; padding:10px; }
+  .rep-table { width:100%; border-collapse: collapse; }
+  .rep-table th, .rep-table td { border:1px solid #000; padding:4px 6px; font-size:12px; }
+
+  #report .print-grid { break-before: page; page-break-before: always; }
+}
+@media screen {
+  #report { display:none; }
+  .print-only { display:none; }
+}
+
+
+@media print{
+  .rep-obs-block{ 
+    border:1px solid #000; 
+    border-radius:4px; 
+    padding:6px 8px; 
+    margin-bottom:8px; 
+    page-break-inside: avoid;
+  }
+  .rep-obs-title{ font-weight:700; font-size:11pt; margin-bottom:4px; }
+  .rep-obs-content{ white-space:pre-wrap; font-size:10pt; min-height:10mm; }
+}
+
+
+/* ==== MOBILE COMPACT HEADER & MOBILE PRINT TWEAKS (added by ChatGPT) ==== */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+@media (max-width: 480px) {
+  /* Make logos and header more compact on small phones */
+  .rdv-logo { height: 44px; }
+  .kpi-card { padding-top: 64px; }
+  .kpi-card .logo-bar { top: 8px; left: 10px; right: 10px; }
+  .kpi-card .bilingual-title { margin-top: 0; }
+  .bilingual-title .line1 { font-size: clamp(0.85rem, 3.8vw, 1rem); }
+  .bilingual-title .line2 { font-size: clamp(0.78rem, 3.2vw, 0.9rem); }
+  .bilingual-title .line3 .es { font-size: clamp(0.8rem, 3.6vw, 0.95rem); }
+  .bilingual-title .line3 .cn { font-size: clamp(0.72rem, 3.2vw, 0.9rem); }
+  #liveCodigo { font-size: clamp(1rem, 5.5vw, 1.35rem); }
+}
+
+@media print {
+  /* Slightly tighter margins and sizes to help mobile print fit better */
+  @page { size: A4; margin: 5mm; }
+  html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .rep-table th, .rep-table td { font-size: 10px; padding: 3px 5px; }
+  .print-grid img { height: 95mm; } /* smaller photos so signatures fit on page 2 */
+}
+
+
+/* ==== HOTFIX: prevent logo/title overlap on small phones ==== */
+@media (max-width: 520px) {
+  .kpi-card { padding-top: 0 !important; }
+  .kpi-card .logo-bar {
+    position: static !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+  .kpi-card .logo-bar .rdv-logo {
+    height: 36px !important;
+    max-width: 45%;
+    width: auto;
+    object-fit: contain;
+  }
+  .kpi-card .bilingual-title { margin-top: 0 !important; }
+  .bilingual-title .line1 { font-size: clamp(0.9rem, 3.8vw, 1rem); }
+  .bilingual-title .line2 { font-size: clamp(0.8rem, 3.4vw, 0.95rem); }
+  .bilingual-title .line3 .es { font-size: clamp(0.85rem, 3.6vw, 0.95rem); }
+  .bilingual-title .line3 .cn { font-size: clamp(0.75rem, 3.2vw, 0.9rem); }
+  #liveCodigo { font-size: clamp(1rem, 5vw, 1.35rem); }
+}
+
+
+/* ==== MOBILE-ONLY TEXT SIZE (targeted) ==== */
+@media (max-width: 520px) {
+  /* Código grande del informe */
+  #liveCodigo {
+    font-size: clamp(0.9rem, 5vw, 1.1rem) !important;
+    line-height: 1.05;
+    letter-spacing: .02em;
+  }
+  /* Título bilingüe */
+  .bilingual-title { line-height: 1.12; }
+  .bilingual-title .line1 { font-size: clamp(0.78rem, 3.2vw, 0.95rem) !important; }
+  .bilingual-title .line2 { font-size: clamp(0.72rem, 3.0vw, 0.9rem) !important; }
+  .bilingual-title .line3 .es { font-size: clamp(0.74rem, 3.0vw, 0.88rem) !important; }
+  .bilingual-title .line3 .cn { font-size: clamp(0.7rem, 2.8vw, 0.85rem) !important; }
+  
+  /* Utilidades: aplica a cualquier texto que quieras reducir solo en móvil */
+  .mobile-sm { font-size: 0.85rem !important; }
+  .mobile-xs { font-size: 0.75rem !important; }
+}
+
+
+/* ==== MOBILE LAYOUT (do NOT mimic desktop) ==== */
+/* Phones up to 520px: wrap logos, shrink fonts, remove negative spacing */
+@media (max-width: 520px) {
+  .kpi-card { padding-top: 0 !important; }
+
+  .kpi-card .logo-bar {
+    position: static !important;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 2px 0 6px 0;
+  }
+  .kpi-card .logo-bar .rdv-logo {
+    height: 30px !important;
+    max-width: 42%;
+    width: auto;
+    object-fit: contain;
+  }
+
+  .bilingual-title { margin-top: 0 !important; padding: 0 6px; line-height: 1.15; }
+  .bilingual-title .line1 { font-size: clamp(0.72rem, 3.0vw, 0.9rem) !important; }
+  .bilingual-title .line2 { font-size: clamp(0.68rem, 2.8vw, 0.85rem) !important; }
+  .bilingual-title .line3 .es { font-size: clamp(0.7rem, 2.9vw, 0.85rem) !important; }
+  .bilingual-title .line3 .cn { font-size: clamp(0.66rem, 2.7vw, 0.82rem) !important; }
+  .bilingual-title .sep { width: 90%; margin:.25rem auto .35rem; }
+
+  #liveCodigo { font-size: clamp(0.9rem, 4.8vw, 1.05rem) !important; line-height:1.08; }
+}
+
+/* Very small phones ≤360px: stack logos vertically to guarantee no overlap */
+@media (max-width: 360px) {
+  .kpi-card .logo-bar { flex-direction: column; gap: 6px; }
+  .kpi-card .logo-bar .rdv-logo { height: 28px !important; max-width: 70%; }
+  .bilingual-title .line1 { font-size: 0.7rem !important; }
+  .bilingual-title .line2 { font-size: 0.66rem !important; }
+}
+
+
+/* ==== TABLET & SMALL LAPTOP SAFE ZONE (<=900px) ==== */
+/* Use stacked/compact header so logos/text never overlap on mid widths */
+@media (max-width: 900px) {
+  .kpi-card { padding-top: 0 !important; }
+  .kpi-card .logo-bar {
+    position: static !important;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 4px 0 8px 0;
+  }
+  .kpi-card .logo-bar .rdv-logo {
+    height: 36px !important;
+    max-width: 42%;
+    width: auto;
+    object-fit: contain;
+  }
+  .bilingual-title { margin-top: 0 !important; line-height: 1.15; padding: 0 6px; }
+  .bilingual-title .line1 { font-size: clamp(0.82rem, 2.2vw, 1rem) !important; }
+  .bilingual-title .line2 { font-size: clamp(0.76rem, 2.0vw, 0.95rem) !important; }
+  .bilingual-title .line3 .es { font-size: clamp(0.78rem, 2.0vw, 0.92rem) !important; }
+  .bilingual-title .line3 .cn { font-size: clamp(0.74rem, 1.9vw, 0.9rem) !important; }
+  .bilingual-title .sep { width: 92%; margin:.3rem auto .45rem; }
+  #liveCodigo { font-size: clamp(1rem, 3vw, 1.2rem) !important; line-height: 1.1; }
+}
+
+
+/* ==== PRINT: remove dark backgrounds/gradients so page doesn't turn black ==== */
+@media print {
+  html, body { 
+    background: #fff !important; 
+    color: #000 !important;
+  }
+  /* Remove card/soft gradients and shadows */
+  .card, .soft, .rep-card, .sys-note, .thumb, .kpi {
+    background: #fff !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+    color: #000 !important;
+  }
+  /* Remove borders and rounded corners if they create dark blocks */
+  .card, .soft { border: 0 !important; border-radius: 0 !important; }
+  /* Ensure wrappers don't carry dark background */
+  .max-w-5xl, section, footer, header {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  /* Force text color to black for all elements in print */
+  * {
+    color: #000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  /* Specific fixes for elements that might still have issues */
+  .rep-table th, .rep-table td {
+    background: #fff !important;
+    color: #000 !important;
+    border-color: #000 !important;
+  }
+  .rep-card {
+    border-color: #000 !important;
+  }
+}
+
+/* Force light mode appearance for print to counteract dark mode */
+@media print and (prefers-color-scheme: dark) {
+  html, body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  * {
+    background: #fff !important;
+    color: #000 !important;
+  }
+}
+
+/* Force light appearance specifically for report content during print in mobile devices */
+@media print and (max-width: 768px) {
+  #report, #report * {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .rep-card, .rep-table, .rep-table th, .rep-table td {
+    background: #fff !important;
+    color: #000 !important;
+    border-color: #000 !important;
+  }
+}
+
+/* Safari-specific print styles to remove headers and footers */
+@media print {
+  @page {
+    margin: 0.5cm;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+  
+  /* Specific rule to prevent Safari from adding URL, date, and page numbers */
+  @page :header { 
+    display: none !important;
+    content: "" !important;
+  }
+  
+  @page :footer { 
+    display: none !important;
+    content: "" !important;
+  }
+  
+  /* Additional rules for Safari */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+}
+/* Tablets y móviles grandes */
+@media (max-width: 900px) {
+  .kpi-card .logo-bar .rdv-logo {
+    height: 80px !important;      /* antes: 36px */
+    max-width: 80%;               /* antes: 42% */
+  }
+}
+
+/* Móviles estándar */
+@media (max-width: 520px) {
+  .kpi-card .logo-bar .rdv-logo {
+    height: 70px !important;      /* antes: 30–36px según tu versión */
+    max-width: 48%;
+  }
+}
+
+/* Móviles muy angostos */
+@media (max-width: 360px) {
+  .kpi-card .logo-bar .rdv-logo {
+    height: 70px !important;      /* antes: 28px */
+    max-width: 72%;
+  }
+}
+
+/* === OVERRIDES MÓVIL: tipografía más pequeña y logos compactos === */
+@media (max-width: 520px){
+  html { font-size: 14px; }
+  body { line-height: 1.2; }
+  label, input, select, textarea, .btn, .note { font-size: 0.9rem; }
+  table, th, td { font-size: 0.85rem; }
+  .bilingual-title .line1,
+  .bilingual-title .line2,
+  .bilingual-title .line3 .es,
+  .bilingual-title .line3 .cn { font-size: 0.9em !important; }
+}
+@media (max-width: 900px){
+  .kpi-card .logo-bar .rdv-logo { height: 44px !important; max-width: 46% !important; }
+}
+@media (max-width: 520px){
+  .kpi-card .logo-bar .rdv-logo { height: 32px !important; max-width: 44% !important; }
+}
+@media (max-width: 360px){
+  .kpi-card .logo-bar .rdv-logo { height: 28px !important; max-width: 70% !important; }
+}
+
+/* ====== CHATBOT STYLES ====== */
+#chatbot-toggler {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: var(--brand);
+  color: white;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 999;
+}
+
+#chatbot-container {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 350px;
+  max-width: 90vw;
+  height: 500px;
+  max-height: 70vh;
+  background-color: #1a263a;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1000;
+  border: 1px solid rgba(255,255,255,.15);
+}
+
+#chatbot-header {
+  background-color: rgba(255,255,255,.08);
+  padding: 10px 15px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#chatbot-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+#chatbot-body {
+  flex-grow: 1;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bot-message, .user-message {
+  padding: 10px 15px;
+  border-radius: 20px;
+  max-width: 80%;
+  line-height: 1.4;
+}
+
+.bot-message {
+  background-color: #2a3b5c;
+  color: #e5e7eb;
+  align-self: flex-start;
+  border-bottom-left-radius: 5px;
+}
+
+.user-message {
+  background-color: var(--brand);
+  color: #0b1220;
+  align-self: flex-end;
+  border-bottom-right-radius: 5px;
+}
+
+#chatbot-options {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid rgba(255,255,255,.1);
+}
+
+.chatbot-option {
+  background-color: transparent;
+  border: 1px solid var(--brand);
+  color: var(--brand);
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.chatbot-option:hover {
+  background-color: var(--brand);
+  color: #0b1220;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@media print {
+  #chatbot-container, #chatbot-toggler {
+    display: none !important;
+  }
+}
