@@ -15,17 +15,42 @@
     <style>
         .table-container { max-height: 400px; overflow-y: auto; }
         .chart-container { height: 300px; margin-top: 20px; }
+        .nav-tabs .nav-link {
+            background-color: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #e5e7eb;
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.12);
+            color: #e5e7eb;
+        }
     </style>
 </head>
 <body>
     <div class="container mt-4">
         <div class="kpi-card">
-            <div class="logo-bar">
+            <div class="logo-bar d-flex justify-content-center align-items-center">
                 <img src="ECUACORRIENTE.png" alt="EcuaCorriente" class="rdv-logo">
-                <h1 class="mb-4 text-center">Sistema de Reportes de Mantenimiento</h1>
                 <img src="LOGO GDR.jpeg" alt="GDR" class="rdv-logo">
             </div>
-        </div>
+            <div class="bilingual-title text-center mb-3">
+                <div class="line1">SISTEMA DE GESTIÓN DE LA CALIDAD</div>
+                <div class="line2">质量管理体系</div>
+                <div class="sep"></div>
+                <div class="line3">
+                    <span class="es">DEPARTAMENTO DE GESTIÓN DE DEPÓSITOS DE RELAVES</span>
+                    <br>
+                    <span class="cn">尾矿库管理部</span>
+                </div>
+            </div>
+            <div class="bilingual-title text-center mb-4">
+                <div class="line1">SISTEMA DE REPORTES DE MANTENIMIENTO</div>
+                <div class="line2">维护报告系统</div>
+                <div class="sep"></div>
+
+            </div>
 
         <!-- Pestañas -->
         <ul class="nav nav-tabs" id="myTab" role="tablist">
@@ -37,37 +62,37 @@
             </li>
         </ul>
 
-        <div class="tab-content mt-4" id="myTabContent">
+        <div class="tab-content mt-4 card" id="myTabContent">
             <!-- Pestaña 1: Registro -->
             <div class="tab-pane fade show active" id="registro" role="tabpanel">
                 <form id="mantenimientoForm">
                     <div class="mb-3">
                         <label for="fechaHora" class="form-label">Fecha y Hora</label>
-                        <input type="datetime-local" class="form-control" id="fechaHora" name="fechaHora" required>
+                        <input type="datetime-local" class="form-control sys-select" id="fechaHora" name="fechaHora" required>
                     </div>
                     <div class="mb-3">
                         <label for="responsable" class="form-label">Responsable</label>
-                        <input type="text" class="form-control" id="responsable" name="responsable" required>
+                        <input type="text" class="form-control sys-select" id="responsable" name="responsable" required>
                     </div>
                     <div class="mb-3">
                         <label for="frente" class="form-label">Frente de Trabajo</label>
-                        <input type="text" class="form-control" id="frente" name="frente" required>
+                        <input type="text" class="form-control sys-select" id="frente" name="frente" required>
                     </div>
                     <div class="mb-3">
                         <label for="tema" class="form-label">Tema / Asunto</label>
-                        <input type="text" class="form-control" id="tema" name="tema" required>
+                        <input type="text" class="form-control sys-select" id="tema" name="tema" required>
                     </div>
                     <div class="mb-3">
                         <label for="actividades" class="form-label">Actividades Realizadas</label>
-                        <textarea class="form-control" id="actividades" name="actividades" rows="3" required></textarea>
+                        <textarea class="form-control sys-note" id="actividades" name="actividades" rows="3" required></textarea>
                     </div>
                     <div class="mb-3">
                         <label for="numeroEcsa" class="form-label">Nº Personas ECSA</label>
-                        <input type="number" class="form-control" id="numeroEcsa" name="numeroEcsa" min="0" value="0" required>
+                        <input type="number" class="form-control sys-select" id="numeroEcsa" name="numeroEcsa" min="0" value="0" required>
                     </div>
                     <div class="mb-3">
                         <label for="numeroContratista" class="form-label">Nº Personas Contratista</label>
-                        <input type="number" class="form-control" id="numeroContratista" name="numeroContratista" min="0" value="0" required>
+                        <input type="number" class="form-control sys-select" id="numeroContratista" name="numeroContratista" min="0" value="0" required>
                     </div>
                     <button type="submit" class="btn btn-primary">Registrar</button>
                 </form>
@@ -79,31 +104,31 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="filtroResponsable" class="form-label">Responsable</label>
-                        <input type="text" class="form-control" id="filtroResponsable" placeholder="Nombre...">
+                        <input type="text" class="form-control sys-select" id="filtroResponsable" placeholder="Nombre...">
                     </div>
                     <div class="col-md-6">
                         <label for="filtroTema" class="form-label">Tema / Asunto</label>
-                        <input type="text" class="form-control" id="filtroTema" placeholder="Tema...">
+                        <input type="text" class="form-control sys-select" id="filtroTema" placeholder="Tema...">
                     </div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="filtroFrente" class="form-label">Frente de Trabajo</label>
-                        <input type="text" class="form-control" id="filtroFrente" placeholder="Frente...">
+                        <input type="text" class="form-control sys-select" id="filtroFrente" placeholder="Frente...">
                     </div>
                     <div class="col-md-3">
                         <label for="fechaDesde" class="form-label">Desde</label>
-                        <input type="date" class="form-control" id="fechaDesde">
+                        <input type="date" class="form-control sys-select" id="fechaDesde">
                     </div>
                     <div class="col-md-3">
                         <label for="fechaHasta" class="form-label">Hasta</label>
-                        <input type="date" class="form-control" id="fechaHasta">
+                        <input type="date" class="form-control sys-select" id="fechaHasta">
                     </div>
                 </div>
 
                 <div class="d-flex gap-2 mb-3">
-                    <button id="btnCargar" class="btn btn-secondary">Cargar / Actualizar</button>
-                    <button id="btnExportar" class="btn btn-success">Exportar a Excel</button>
+                    <button id="btnCargar" class="btn btn-primary">Cargar / Actualizar</button>
+                    <button id="btnExportar" class="btn btn-primary">Exportar a Excel</button>
                 </div>
 
                 <!-- Gráfico -->
