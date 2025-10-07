@@ -131,7 +131,7 @@ select.form-control {
   }
   .rep-logo{ height:26mm; width:auto; object-fit:contain; }
   .print-title{ color:#000; }
-  .print-title .line1{ font-weight:800; font-size:10pt; letter-spacing:.02em; }
+  .print-title .line1{ font-weight:800; font-size:8pt; letter-spacing:.02em; }
   .print-title .line2{ font-weight:600; font-size:10pt; }
   .print-title .line3 .es{ font-weight:800; font-size:12pt; }
   .print-title .line3 .cn{ font-size:10pt; margin-top:2px; }
