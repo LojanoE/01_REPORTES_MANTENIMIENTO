@@ -374,6 +374,103 @@ function exportarAExcel() {
     }, 3000);
 }
 
+// ===== FUNCIONES PARA MODALES VISTOSOS =====
+function mostrarModalExito(titulo, mensaje) {
+    // Remover cualquier modal existente
+    const modalesExistentes = document.querySelectorAll('.mensaje-modal');
+    modalesExistentes.forEach(modal => modal.remove());
+    
+    const modalHtml = `
+        <div class="mensaje-modal modal fade show d-block" id="mensajeModal" tabindex="-1" style="display: block; background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content card">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title fw-bold"><i class="bi bi-check-circle-fill me-2"></i>${titulo}</h5>
+                    </div>
+                    <div class="modal-body text-center py-4">
+                        <div class="alert alert-success d-inline-block">
+                            <i class="bi bi-check-circle" style="font-size: 3rem; display: block; margin-bottom: 1rem;"></i>
+                            <p class="mb-0">${mensaje}</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-center">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Cerrar el modal automáticamente después de 5 segundos
+    setTimeout(() => {
+        const modal = document.getElementById('mensajeModal');
+        if (modal) {
+            const bsModal = bootstrap.Modal.getInstance(modal) || new bootstrap.Modal(modal);
+            bsModal.hide();
+        }
+    }, 5000);
+}
+
+function mostrarModalAdvertencia(titulo, mensaje) {
+    // Remover cualquier modal existente
+    const modalesExistentes = document.querySelectorAll('.mensaje-modal');
+    modalesExistentes.forEach(modal => modal.remove());
+    
+    const modalHtml = `
+        <div class="mensaje-modal modal fade show d-block" id="mensajeModal" tabindex="-1" style="display: block; background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content card">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>${titulo}</h5>
+                    </div>
+                    <div class="modal-body text-center py-4">
+                        <div class="alert alert-warning d-inline-block">
+                            <i class="bi bi-exclamation-triangle" style="font-size: 3rem; display: block; margin-bottom: 1rem;"></i>
+                            <p class="mb-0">${mensaje}</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-center">
+                        <button type="button" class="btn btn-warning text-dark" data-bs-dismiss="modal">Aceptar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function mostrarModalError(titulo, mensaje) {
+    // Remover cualquier modal existente
+    const modalesExistentes = document.querySelectorAll('.mensaje-modal');
+    modalesExistentes.forEach(modal => modal.remove());
+    
+    const modalHtml = `
+        <div class="mensaje-modal modal fade show d-block" id="mensajeModal" tabindex="-1" style="display: block; background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content card">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title fw-bold"><i class="bi bi-x-circle-fill me-2"></i>${titulo}</h5>
+                    </div>
+                    <div class="modal-body text-center py-4">
+                        <div class="alert alert-danger d-inline-block">
+                            <i class="bi bi-x-circle" style="font-size: 3rem; display: block; margin-bottom: 1rem;"></i>
+                            <p class="mb-0">${mensaje}</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-center">
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Aceptar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
 // ===== INICIALIZACIÓN =====
 document.addEventListener('DOMContentLoaded', function() {
     // Establecer fecha actual en el formulario
@@ -441,12 +538,8 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Respuesta de Google Apps Script:', result); // Debug log
 
             if (response.ok) {
-                mensajeDiv.innerHTML = `
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <strong>✅ ¡Registro completado!</strong> Los datos han sido guardados correctamente.
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-                    </div>
-                `;
+                // Mostrar mensaje de éxito en una ventana modal más vistosa
+                mostrarModalExito("✅ ¡Registro completado!", "Los datos han sido guardados correctamente.");
                 const nuevoRegistro = {
                     'Fecha y Hora': data.fechaHora,
                     'Responsable': data.responsable.toUpperCase(),
@@ -494,11 +587,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     aplicarFiltros();
                 }
                 
-                mensajeDiv.innerHTML = `<div class="alert alert-warning">⚠️ Registro guardado localmente. Error al enviar a Google Apps Script.</div>`;
-                // Mostrar mensaje de advertencia por más tiempo para que el usuario lo note
-                setTimeout(() => {
-                    mensajeDiv.innerHTML = '';
-                }, 5000);
+                mostrarModalAdvertencia("⚠️ Registro guardado localmente", "Error al enviar a Google Apps Script.");
             }
         } catch (error) {
             console.error('Error:', error);
@@ -523,7 +612,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 aplicarFiltros();
             }
             
-            mensajeDiv.innerHTML = `<div class="alert alert-warning">⚠️ Error de red. Registro guardado localmente: ${error.message}</div>`;
+            mostrarModalError("⚠️ Error de red", `Registro guardado localmente: ${error.message}`);
         } finally {
             submitBtn.disabled = false;
             submitBtn.textContent = 'Registrar';
