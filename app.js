@@ -386,6 +386,7 @@ function mostrarModalExito(titulo, mensaje) {
                 <div class="modal-content card">
                     <div class="modal-header bg-success text-white">
                         <h5 class="modal-title fw-bold"><i class="bi bi-check-circle-fill me-2"></i>${titulo}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body text-center py-4">
                         <div class="alert alert-success d-inline-block">
@@ -394,7 +395,7 @@ function mostrarModalExito(titulo, mensaje) {
                         </div>
                     </div>
                     <div class="modal-footer justify-content-center">
-                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+                        <button type="button" class="btn btn-primary" onclick="cerrarModal()">Aceptar</button>
                     </div>
                 </div>
             </div>
@@ -405,11 +406,7 @@ function mostrarModalExito(titulo, mensaje) {
     
     // Cerrar el modal automáticamente después de 5 segundos
     setTimeout(() => {
-        const modal = document.getElementById('mensajeModal');
-        if (modal) {
-            const bsModal = bootstrap.Modal.getInstance(modal) || new bootstrap.Modal(modal);
-            bsModal.hide();
-        }
+        cerrarModal();
     }, 5000);
 }
 
@@ -424,6 +421,7 @@ function mostrarModalAdvertencia(titulo, mensaje) {
                 <div class="modal-content card">
                     <div class="modal-header bg-warning text-dark">
                         <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>${titulo}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body text-center py-4">
                         <div class="alert alert-warning d-inline-block">
@@ -432,7 +430,7 @@ function mostrarModalAdvertencia(titulo, mensaje) {
                         </div>
                     </div>
                     <div class="modal-footer justify-content-center">
-                        <button type="button" class="btn btn-warning text-dark" data-bs-dismiss="modal">Aceptar</button>
+                        <button type="button" class="btn btn-warning text-dark" onclick="cerrarModal()">Aceptar</button>
                     </div>
                 </div>
             </div>
@@ -453,6 +451,7 @@ function mostrarModalError(titulo, mensaje) {
                 <div class="modal-content card">
                     <div class="modal-header bg-danger text-white">
                         <h5 class="modal-title fw-bold"><i class="bi bi-x-circle-fill me-2"></i>${titulo}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body text-center py-4">
                         <div class="alert alert-danger d-inline-block">
@@ -461,7 +460,7 @@ function mostrarModalError(titulo, mensaje) {
                         </div>
                     </div>
                     <div class="modal-footer justify-content-center">
-                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Aceptar</button>
+                        <button type="button" class="btn btn-danger" onclick="cerrarModal()">Aceptar</button>
                     </div>
                 </div>
             </div>
@@ -469,6 +468,16 @@ function mostrarModalError(titulo, mensaje) {
     `;
     
     document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+// Función para cerrar modales
+function cerrarModal() {
+    const modal = document.getElementById('mensajeModal');
+    if (modal) {
+        modal.remove();
+        // Remover la clase que evita el desplazamiento en el body
+        document.body.classList.remove('modal-open');
+    }
 }
 
 // ===== INICIALIZACIÓN =====

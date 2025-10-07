@@ -625,21 +625,28 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 /* Estilos para los modales vistosos de mensajes */
 .mensaje-modal .modal-content {
-  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03)) !important;
+  background: #1e293b !important;  /* Fondo sólido oscuro */
   border: 1px solid rgba(255,255,255,.08) !important;
   border-radius: 1rem !important;
   color: #e5e7eb !important;
+  backdrop-filter: blur(10px) !important;
 }
 
 .mensaje-modal .modal-header {
   border-top-left-radius: calc(1rem - 1px) !important;
   border-top-right-radius: calc(1rem - 1px) !important;
+  border-bottom: 1px solid rgba(255,255,255,.08) !important;
+}
+
+.mensaje-modal .modal-body {
+  background: rgba(255,255,255,0.05) !important;
 }
 
 .mensaje-modal .modal-footer {
   border-bottom-left-radius: calc(1rem - 1px) !important;
   border-bottom-right-radius: calc(1rem - 1px) !important;
   border-top: 1px solid rgba(255,255,255,.08) !important;
+  background: rgba(255,255,255,0.05) !important;
 }
 
 .mensaje-modal .alert {
@@ -647,6 +654,11 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   border: 1px solid rgba(255,255,255,.12) !important;
   border-radius: 0.5rem !important;
   color: #e5e7eb !important;
+}
+
+/* Asegurar que el botón de cierre sea visible */
+.mensaje-modal .btn-close {
+  filter: invert(1) !important;  /* Hacer que el botón de cierre sea visible en fondos oscuros */
 }
 
 @media print {
