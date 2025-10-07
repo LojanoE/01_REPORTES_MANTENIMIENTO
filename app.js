@@ -486,6 +486,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 mensajeDiv.innerHTML = `<div class="alert alert-warning">⚠️ Registro guardado localmente. Error al enviar a Google Apps Script.</div>`;
+                // Mostrar mensaje de advertencia por más tiempo para que el usuario lo note
+                setTimeout(() => {
+                    mensajeDiv.innerHTML = '';
+                }, 5000);
             }
         } catch (error) {
             console.error('Error:', error);
