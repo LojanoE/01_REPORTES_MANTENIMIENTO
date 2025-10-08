@@ -92,6 +92,10 @@ function mostrarRegistros(registros) {
             reg['description'] || 
             reg[3] || '';
             
+        const actividadesHtml = actividades.includes('\n')
+            ? '<ul>' + actividades.split('\n').filter(line => line.trim() !== '').map(linea => `<li>${linea}</li>`).join('') + '</ul>'
+            : actividades;
+            
         const numeroEcsa = 
             reg['Nº Personas ECSA'] || 
             reg['numeroEcsa'] || 
@@ -112,7 +116,7 @@ function mostrarRegistros(registros) {
                 <td>${responsable}</td>
                 <td>${tema}</td>
                 <td>${frente}</td>
-                <td>${actividades}</td>
+                <td>${actividadesHtml}</td>
                 <td>${numeroEcsa}</td>
                 <td>${numeroContratista}</td>
             </tr>
@@ -707,6 +711,47 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Lógica para auto-viñetas en el campo de actividades
+    const actividadesTextarea = document.getElementById('actividades');
+    actividadesTextarea.addEventListener('focus', function() {
+        if (this.value === '') {
+            this.value = '• ';
+        }
+    });
+    actividadesTextarea.addEventListener('keydown', function(e) {
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            this.value = this.value.substring(0, start) + '\n• ' + this.value.substring(end);
+            this.selectionStart = this.selectionEnd = start + 3;
+            return;
+        }
+
+        // Prevenir borrar la viñeta con la tecla Backspace solo si la línea tiene texto
+        if (e.key === 'Backspace' && start === end) {
+            const lineStart = this.value.lastIndexOf('\n', start - 1) + 1;
+            
+            // Si el cursor está justo después de la viñeta ('• ')
+            if (start === lineStart + 2 && this.value.substring(lineStart, start) === '• ') {
+                
+                // Revisa si hay texto en el resto de la línea
+                let lineEnd = this.value.indexOf('\n', start);
+                if (lineEnd === -1) {
+                    lineEnd = this.value.length;
+                }
+                const lineContent = this.value.substring(start, lineEnd);
+
+                // Si la línea tiene contenido (no solo espacios), protege la viñeta
+                if (lineContent.trim() !== '') {
+                    e.preventDefault(); // Prevenir el borrado
+                }
+                // Si la línea está vacía, permite que el usuario borre la viñeta.
+            }
+        }
+    });
+
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
         submitBtn.disabled = true;
@@ -724,13 +769,19 @@ document.addEventListener('DOMContentLoaded', function() {
             frente = data.frenteSelect.toUpperCase();
         }
         
+        // Limpiar viñetas de las actividades antes de enviar
+        const actividadesSinVinetas = data.actividades.split('\n')
+            .map(line => line.replace(/^•\s*/, '').trim())
+            .filter(line => line)
+            .join('\n');
+
         // Datos para envío
         const datosParaEnvio = {
             fechaHora: data.fechaHora,
             responsable: data.responsable.toUpperCase(),
             tema: data.tema.toUpperCase(),
             frente: frente,
-            actividades: data.actividades,
+            actividades: actividadesSinVinetas,
             numeroEcsa: data.numeroEcsa,
             numeroContratista: data.numeroContratista
         };

@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- SheetJS (xlsx) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <link href="styles.css?v=1.0.7" rel="stylesheet">
+    <link href="styles.css?v=1.0.8" rel="stylesheet">
     <!-- Estilos personalizados -->
     <style>
         .table-container { max-height: 400px; overflow-y: auto; }
@@ -114,8 +114,8 @@
                         <input type="text" class="form-control sys-select" id="tema" name="tema" style="text-transform: uppercase;" required>
                     </div>
                     <div class="mb-3">
-                        <label for="actividades" class="form-label">Actividades Realizadas</label>
-                        <textarea class="form-control sys-note" id="actividades" name="actividades" rows="3" placeholder="Descripción detallada de las actividades realizadas..." required></textarea>
+                        <label for="actividades" class="form-label">Actividades Realizadas <small class="text-muted">(una por línea)</small></label>
+                        <textarea class="form-control sys-note" id="actividades" name="actividades" rows="3" placeholder="- Actividad 1&#10;- Actividad 2&#10;- Actividad 3" required></textarea>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -200,6 +200,6 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Tu script externo -->
-    <script src="app.js?v=1.0.7"></script>
+    <script src="app.js?v=1.0.8"></script>
 </body>
 </html>
