@@ -1,0 +1,345 @@
+:root {
+    --bg-primary: #0b1220;
+    --bg-secondary: #0f172a;
+    --bg-card: rgba(30, 41, 59, 0.6);
+    --text-primary: #e5e7eb;
+    --text-secondary: #94a3b8;
+    --accent-cyan: #0ea5e9;
+    --accent-cyan-light: #22d3ee;
+    --accent-amber: #D97706;
+    --accent-amber-light: #FBBF24;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --shadow-glow: 0 0 40px rgba(14, 165, 233, 0.15);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    background: linear-gradient(135deg, #0b1220 0%, #0f172a 50%, #1e293b 100%);
+    color: var(--text-primary);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+}
+
+/* Header Styles */
+header {
+    background: rgba(15, 23, 42, 0.5);
+    border-bottom: 1px solid var(--border-color);
+    backdrop-filter: blur(10px);
+}
+
+.logo-header {
+    padding: 0 20px;
+}
+
+.header-logo {
+    height: 80px;
+    width: auto;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    transition: transform 0.3s ease;
+}
+
+.header-logo:hover {
+    transform: scale(1.05);
+}
+
+.bilingual-title {
+    text-align: center;
+    line-height: 1.3;
+}
+
+.bilingual-title .line1 {
+    font-weight: 800;
+    font-size: 1.4rem;
+    letter-spacing: 0.02em;
+    color: var(--text-primary);
+}
+
+.bilingual-title .line2 {
+    font-weight: 600;
+    font-size: 1.1rem;
+    opacity: 0.85;
+    color: var(--text-secondary);
+    font-family: 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+}
+
+.bilingual-title .sep {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+    margin: 0.75rem auto;
+    width: 80%;
+    max-width: 400px;
+}
+
+.bilingual-title .line3 .es {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.bilingual-title .line3 .cn {
+    font-size: 0.95rem;
+    margin-top: 4px;
+    color: var(--text-secondary);
+    font-family: 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+}
+
+/* Card Styles */
+.app-card {
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.app-card:hover::before {
+    opacity: 1;
+}
+
+.mantenimiento-card {
+    --accent-color: var(--accent-cyan);
+    box-shadow: 0 10px 40px rgba(14, 165, 233, 0.1);
+}
+
+.mantenimiento-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 60px rgba(14, 165, 233, 0.25);
+    border-color: rgba(14, 165, 233, 0.3);
+}
+
+.pozos-card {
+    --accent-color: var(--accent-amber);
+    box-shadow: 0 10px 40px rgba(217, 119, 6, 0.1);
+}
+
+.pozos-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 60px rgba(217, 119, 6, 0.25);
+    border-color: rgba(217, 119, 6, 0.3);
+}
+
+.card-icon {
+    margin-bottom: 1.5rem;
+}
+
+.icon-emoji {
+    font-size: 4rem;
+    display: block;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    transition: transform 0.3s ease;
+}
+
+.app-card:hover .icon-emoji {
+    transform: scale(1.1);
+}
+
+.card-title {
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.card-subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    font-family: 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+    margin-bottom: 1rem;
+}
+
+.card-divider {
+    height: 2px;
+    width: 60px;
+    background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+    margin: 1rem auto;
+    border-radius: 1px;
+}
+
+.card-description {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    flex-grow: 1;
+}
+
+.card-footer {
+    margin-top: auto;
+}
+
+.access-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 2rem;
+    background: linear-gradient(135deg, var(--accent-color), var(--accent-light));
+    color: #0b1220;
+    font-weight: 600;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.mantenimiento-card .access-btn {
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-cyan-light));
+}
+
+.pozos-card .access-btn {
+    background: linear-gradient(135deg, var(--accent-amber), var(--accent-amber-light));
+}
+
+.app-card:hover .access-btn {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.access-btn svg {
+    transition: transform 0.3s ease;
+}
+
+.app-card:hover .access-btn svg {
+    transform: translateX(4px);
+}
+
+/* Footer */
+footer {
+    background: rgba(15, 23, 42, 0.5);
+    border-top: 1px solid var(--border-color);
+    backdrop-filter: blur(10px);
+}
+
+.footer-text {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+/* Link reset */
+.card-link {
+    display: block;
+    height: 100%;
+}
+
+.card-link:hover,
+.card-link:focus,
+.card-link:active {
+    text-decoration: none;
+    outline: none;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .header-logo {
+        height: 60px;
+    }
+
+    .bilingual-title .line1 {
+        font-size: 1.1rem;
+    }
+
+    .bilingual-title .line2 {
+        font-size: 0.9rem;
+    }
+
+    .bilingual-title .line3 .es {
+        font-size: 0.85rem;
+    }
+
+    .bilingual-title .line3 .cn {
+        font-size: 0.8rem;
+    }
+
+    .app-card {
+        padding: 2rem 1.5rem;
+    }
+
+    .card-title {
+        font-size: 1.3rem;
+    }
+
+    .icon-emoji {
+        font-size: 3rem;
+    }
+
+    .card-description {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-logo {
+        height: 50px;
+    }
+
+    .logo-header {
+        gap: 1.5rem;
+    }
+
+    .bilingual-title .line1 {
+        font-size: 0.95rem;
+    }
+
+    .bilingual-title .line2 {
+        font-size: 0.8rem;
+    }
+
+    .bilingual-title .line3 .es {
+        font-size: 0.75rem;
+    }
+
+    .card-title {
+        font-size: 1.2rem;
+    }
+
+    .access-btn {
+        padding: 0.6rem 1.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.app-card {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.col-12:nth-child(1) .app-card {
+    animation-delay: 0.1s;
+}
+
+.col-12:nth-child(2) .app-card {
+    animation-delay: 0.2s;
+}

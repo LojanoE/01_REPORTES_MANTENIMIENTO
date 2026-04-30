@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Sistema de Inspección - Depósito de Relaves</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css?v=1.8.0">
+</head>
+
+<body>
+
+    <!-- Login Overlay -->
+    <div id="loginOverlay"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1e293b 0%, #334155 100%); z-index: 10000; display: flex; justify-content: center; align-items: center;">
+        <div
+            style="background: white; padding: 40px; border-radius: 16px; width: 350px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.4); border-top: 5px solid #D97706;">
+            <div style="font-size: 3em; margin-bottom: 15px;">⛏️</div>
+            <h3 style="margin-bottom: 8px; color: #1e293b; font-weight: 700; font-size: 1.5em;">Depósito de Relaves</h3>
+            <p style="color: #D97706; margin-bottom: 20px; font-weight: 600; font-size: 0.95em;">Sistema de Inspección y
+                Monitoreo</p>
+            <p class="text-muted mb-4" style="font-size: 0.8rem;">Versión del Sistema: <span
+                    class="app-version-text">...</span></p>
+            <input type="text" id="loginUser" class="form-control mb-3" placeholder="Usuario"
+                style="border: 1.5px solid #cbd5e1; padding: 10px;">
+            <input type="password" id="loginPass" class="form-control mb-3" placeholder="Contraseña"
+                style="border: 1.5px solid #cbd5e1; padding: 10px;">
+            <button onclick="performLogin()" class="btn btn-primary w-100"
+                style="background: linear-gradient(135deg, #D97706 0%, #B45309 100%); font-weight: 700; padding: 10px; margin-top: 10px;">🔓
+                Iniciar Sesión</button>
+            <div id="loginError"
+                style="color: #dc2626; margin-top: 12px; font-size: 0.9em; display: none; font-weight: 600;">
+                Credenciales incorrectas</div>
+            <button onclick="forceUpdate()" class="btn btn-link btn-sm mt-4 text-decoration-none"
+                style="color: #9ca3af;">Forzar Actualización</button>
+        </div>
+    </div>
+
+    <div class="container main-container" id="mainApp" style="display: none;">
+
+        <!-- Nav Tabs -->
+        <ul class="nav nav-tabs" id="appTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="verificacion-tab" data-bs-toggle="tab"
+                    data-bs-target="#verificacion" type="button" role="tab" aria-controls="verificacion"
+                    aria-selected="true">Verificación</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="reportes-tab" data-bs-toggle="tab" data-bs-target="#reportes" type="button"
+                    role="tab" aria-controls="reportes" aria-selected="false">Reportes (Exportar ZIP)</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="consulta-tab" data-bs-toggle="tab" data-bs-target="#consulta" type="button"
+                    role="tab" aria-controls="consulta" aria-selected="false">Consulta y Lote</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="bombas-tab" data-bs-toggle="tab" data-bs-target="#bombas" type="button"
+                    role="tab" aria-controls="bombas" aria-selected="false">Información de Bombas</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="grafica-tab" data-bs-toggle="tab" data-bs-target="#grafica" type="button"
+                    role="tab" aria-controls="grafica" aria-selected="false">Gráfica de Niveles</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="configuracion-tab" data-bs-toggle="tab" data-bs-target="#configuracion" type="button"
+                    role="tab" aria-controls="configuracion" aria-selected="false" style="display: none;">⚙️ Configuración</button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="appTabsContent">
+            <!-- Tab: Verificación -->
+            <div class="tab-pane fade show active" id="verificacion" role="tabpanel" aria-labelledby="verificacion-tab">
+
+                <h1>
+                    <span class="zh-text">📋 尾矿库安全、环保、排水作业检查表</span>
+                    <span class="es-text">📋 Inspección de Seguridad y Control Ambiental - Depósito de Relaves</span>
+                </h1>
+
+                <form id="inspectionForm">
+                    <!-- Hidden input for current record ID -->
+                    <input type="hidden" id="currentRecordId" value="">
+
+                    <!-- Metadata Section -->
+                    <div class="row form-section">
+                        <div class="col-md-4 mb-1">
+                            <label for="date" class="form-label">日期 Fecha:</label>
+                            <input type="date" class="form-control" id="date" required>
+                        </div>
+                        <div class="col-md-4 mb-1">
+                            <label for="dayShiftPerson" class="form-label">白班当班人 dia:</label>
+                            <input type="text" class="form-control" id="dayShiftPerson">
+                        </div>
+                        <div class="col-md-4 mb-1">
+                            <label for="nightShiftPerson" class="form-label">夜班当班人 noche:</label>
+                            <input type="text" class="form-control" id="nightShiftPerson">
+                        </div>
+                    </div>
+
+                    <!-- Checklist Table -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 50%">检查项目 Artículos Marcados</th>
+                                    <th style="width: 25%">白班 Dia</th>
+                                    <th style="width: 25%">夜班 Noche</th>
+                                </tr>
+                            </thead>
+                            <tbody id="checklistBody">
+                                <!-- Items will be injected here by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Remarks Section -->
+                    <div class="row mt-2">
+                        <div class="col-md-6 mb-1">
+                            <label for="dayRemarks" class="form-label">备注 (白班) Obs. Día:</label>
+                            <textarea class="form-control" id="dayRemarks" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-6 mb-1">
+                            <label for="nightRemarks" class="form-label">备注 (夜班) Obs. Noche:</label>
+                            <textarea class="form-control" id="nightRemarks" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Technical Data Section (Not for PDF) -->
+                    <div class="card mt-3 bg-light" style="border: 2px solid #D97706;">
+                        <div class="card-header"
+                            style="background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); color: #1e293b; font-weight: 700;">
+                            <strong>⚙️ Datos Técnicos de Bombeo y Monitoreo de Niveles</strong>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-bordered mb-0">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th style="width: 50%">Dato Técnico</th>
+                                            <th style="width: 25%">白班 Dia</th>
+                                            <th style="width: 25%">夜班 Noche</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Bomba - Hora Apertura</strong></td>
+                                            <td><input type="time" class="form-control form-control-sm"
+                                                    id="day_pump_open"></td>
+                                            <td><input type="time" class="form-control form-control-sm"
+                                                    id="night_pump_open"></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Bomba - Hora Cierre</strong></td>
+                                            <td><input type="time" class="form-control form-control-sm"
+                                                    id="day_pump_close"></td>
+                                            <td><input type="time" class="form-control form-control-sm"
+                                                    id="night_pump_close"></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Bomba - Cantidad</strong></td>
+                                            <td><input type="number" step="0.01" class="form-control form-control-sm"
+                                                    id="day_pump_quantity" placeholder="0.00"></td>
+                                            <td><input type="number" step="0.01" class="form-control form-control-sm"
+                                                    id="night_pump_quantity" placeholder="0.00"></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Elevación Nivel Agua (Antes)</strong></td>
+                                            <td><input type="number" step="0.01" class="form-control form-control-sm"
+                                                    id="day_water_level_before" placeholder="0.00"></td>
+                                            <td><input type="number" step="0.01" class="form-control form-control-sm"
+                                                    id="night_water_level_before" placeholder="0.00"></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Elevación Nivel Agua (Después)</strong></td>
+                                            <td><input type="number" step="0.01" class="form-control form-control-sm"
+                                                    id="day_water_level_after" placeholder="0.00"></td>
+                                            <td><input type="number" step="0.01" class="form-control form-control-sm"
+                                                    id="night_water_level_after" placeholder="0.00"></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Elevación del Lodo</strong></td>
+                                            <td><input type="number" step="0.01" class="form-control form-control-sm"
+                                                    id="day_mud_level" placeholder="0.00"></td>
+                                            <td><input type="number" step="0.01" class="form-control form-control-sm"
+                                                    id="night_mud_level" placeholder="0.00"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
+                        <button type="button" class="btn btn-secondary me-md-2" onclick="clearForm()">Limpiar /
+                            Clear</button>
+                        <button type="button" class="btn btn-success" onclick="saveToDatabase()">Guardar en BD
+                            (Supabase)</button>
+                    </div>
+                </form>
+
+            </div>
+
+            <!-- Tab: Reportes -->
+            <div class="tab-pane fade" id="reportes" role="tabpanel" aria-labelledby="reportes-tab">
+                <h1>
+                    <span class="zh-text">📊 导出报告 (ZIP)</span>
+                    <span class="es-text">📊 Exportar Reportes del Depósito (ZIP)</span>
+                </h1>
+
+                <div class="row form-section">
+                    <div class="col-md-5 mb-3">
+                        <label for="startDate" class="form-label">Desde (Fecha):</label>
+                        <input type="date" class="form-control" id="startDate">
+                    </div>
+                    <div class="col-md-5 mb-3">
+                        <label for="endDate" class="form-label">Hasta (Fecha):</label>
+                        <input type="date" class="form-control" id="endDate">
+                    </div>
+                    <div class="col-md-2 mb-3 d-flex align-items-end">
+                        <button type="button" class="btn btn-primary w-100" onclick="exportRangeToZip()">Generar
+                            ZIP</button>
+                    </div>
+                </div>
+
+                <div id="exportStatus" style="display: none;" class="mt-3">
+                    <div class="progress">
+                        <div id="exportProgressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                            role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <p id="exportStatusText" class="mt-2 text-center text-muted small"></p>
+                </div>
+            </div>
+
+            <!-- Tab: Consulta -->
+            <div class="tab-pane fade" id="consulta" role="tabpanel" aria-labelledby="consulta-tab">
+                <h1>
+                    <span class="zh-text">🔍 查询与批量打印</span>
+                    <span class="es-text">🔍 Consulta y Descarga de Reportes</span>
+                </h1>
+
+                <div class="row form-section">
+                    <div class="col-md-4 mb-3">
+                        <label for="queryStartDate" class="form-label">Desde (Fecha):</label>
+                        <input type="date" class="form-control" id="queryStartDate">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="queryEndDate" class="form-label">Hasta (Fecha):</label>
+                        <input type="date" class="form-control" id="queryEndDate">
+                    </div>
+                    <div class="col-md-4 mb-3 d-flex align-items-end">
+                        <button type="button" class="btn btn-primary me-2" onclick="performQuery()">Buscar</button>
+                        <button type="button" class="btn btn-success" id="batchPrintBtn"
+                            onclick="downloadSelectedPDFs()" disabled>Descargar Seleccionados (ZIP)</button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 5%"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()">
+                                </th>
+                                <th style="width: 20%">Fecha</th>
+                                <th style="width: 25%">Personal Día</th>
+                                <th style="width: 30%">Personal Noche</th>
+                                <th style="width: 20%">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="queryResultsBody">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">Seleccione un rango y presione buscar.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="queryStatus" style="display: none;" class="mt-3">
+                    <div class="progress">
+                        <div id="queryProgressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                            role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <p id="queryStatusText" class="mt-2 text-center text-muted small"></p>
+                </div>
+            </div>
+
+            <!-- Tab: Información de Bombas -->
+            <div class="tab-pane fade" id="bombas" role="tabpanel" aria-labelledby="bombas-tab">
+                <h1>
+                    <span class="zh-text">💧 泵及水位监测数据</span>
+                    <span class="es-text">💧 Información Técnica - Bombas y Niveles de Agua</span>
+                </h1>
+
+                <div class="row form-section">
+                    <div class="col-md-5 mb-3">
+                        <label for="pumpStartDate" class="form-label">Desde (Fecha):</label>
+                        <input type="date" class="form-control" id="pumpStartDate">
+                    </div>
+                    <div class="col-md-5 mb-3">
+                        <label for="pumpEndDate" class="form-label">Hasta (Fecha):</label>
+                        <input type="date" class="form-control" id="pumpEndDate">
+                    </div>
+                    <div class="col-md-2 mb-3 d-flex align-items-end gap-2">
+                        <button type="button" class="btn btn-primary w-100"
+                            onclick="loadPumpRecordsReport()">Buscar</button>
+                        <button type="button" class="btn btn-success w-100"
+                            onclick="exportPumpToExcel()">📊 Excel</button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered table-sm" style="font-size: 0.8rem;">
+                        <thead class="table-dark">
+                            <tr>
+                                <th rowspan="2" class="align-middle text-center">Fecha</th>
+                                <th colspan="6" class="text-center bg-light text-dark">DÍA (白班)</th>
+                                <th colspan="6" class="text-center bg-dark text-white">NOCHE (夜班)</th>
+                            </tr>
+                            <tr>
+                                <th>Apertura</th>
+                                <th>Cierre</th>
+                                <th>Cant.</th>
+                                <th>N. Antes</th>
+                                <th>N. Después</th>
+                                <th>Lodo</th>
+                                <th>Apertura</th>
+                                <th>Cierre</th>
+                                <th>Cant.</th>
+                                <th>N. Antes</th>
+                                <th>N. Después</th>
+                                <th>Lodo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pumpReportBody">
+                            <tr>
+                                <td colspan="11" class="text-center text-muted">Seleccione un rango y presione buscar.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Gráfica de Niveles -->
+            <div class="tab-pane fade" id="grafica" role="tabpanel" aria-labelledby="grafica-tab">
+                <h1>
+                    <span class="zh-text">📈 水位变化趋势图</span>
+                    <span class="es-text">📈 Gráfica de Tendencias - Niveles de Agua</span>
+                </h1>
+
+                <div class="row form-section">
+                    <div class="col-md-5 mb-3">
+                        <label for="chartStartDate" class="form-label">Desde (Fecha):</label>
+                        <input type="date" class="form-control" id="chartStartDate">
+                    </div>
+                    <div class="col-md-5 mb-3">
+                        <label for="chartEndDate" class="form-label">Hasta (Fecha):</label>
+                        <input type="date" class="form-control" id="chartEndDate">
+                    </div>
+                    <div class="col-md-2 mb-3 d-flex align-items-end">
+                        <button type="button" class="btn btn-primary w-100" onclick="renderWaterLevelChart()">Generar
+                            Gráfica</button>
+                    </div>
+                </div>
+
+                <div class="card p-3 shadow-sm mt-3" style="min-height: 400px; background: white;">
+                    <canvas id="waterLevelChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Tab: Configuración (Solo Admin) -->
+            <div class="tab-pane fade" id="configuracion" role="tabpanel" aria-labelledby="configuracion-tab">
+                <h1>
+                    <span class="zh-text">⚙️ 系统配置 - 用户管理</span>
+                    <span class="es-text">⚙️ Configuración del Sistema - Gestión de Usuarios</span>
+                </h1>
+
+                <div class="card bg-light border-warning mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">🔐 Gestión de Usuarios y Roles</h5>
+                        <p class="card-text text-muted">
+                            <strong>Admin:</strong> Acceso completo incluyendo Configuración.<br>
+                            <strong>User:</strong> Acceso a todo excepto Configuración.<br>
+                            <strong>Viewer:</strong> Acceso solo a Reportes, Consulta, Bombas y Gráfica (no Verificación ni Configuración).
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Formulario de Usuario -->
+                <div class="card mb-3">
+                    <div class="card-header bg-primary text-white">
+                        <strong id="userFormTitle">➕ Nuevo Usuario</strong>
+                    </div>
+                    <div class="card-body">
+                        <input type="hidden" id="editUserId">
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <label for="newUsername" class="form-label">Usuario:</label>
+                                <input type="text" class="form-control" id="newUsername" placeholder="Nombre de usuario">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label for="newUserPassword" class="form-label">Contraseña:</label>
+                                <input type="text" class="form-control" id="newUserPassword" placeholder="Contraseña">
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <label for="newUserRole" class="form-label">Rol:</label>
+                                <select class="form-select" id="newUserRole">
+                                    <option value="viewer">Viewer</option>
+                                    <option value="user">User</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-2 d-flex align-items-end">
+                                <button type="button" class="btn btn-success w-100" onclick="saveUser()">💾 Guardar</button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="clearUserForm()" style="display: none;" id="cancelUserBtn">❌ Cancelar Edición</button>
+                    </div>
+                </div>
+
+                <!-- Tabla de Usuarios -->
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 20%">Usuario</th>
+                                <th style="width: 20%">Contraseña</th>
+                                <th style="width: 20%">Rol</th>
+                                <th style="width: 20%">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr>
+                                <td colspan="4" class="text-center">Cargando usuarios...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center pb-3">
+            <small class="text-muted">
+                Versión del Sistema: <span class="app-version-text">...</span> |
+                <a href="javascript:void(0)" onclick="forceUpdate()" class="text-decoration-none">Forzar actualización
+                    de última versión</a>
+            </small>
+        </div>
+
+    </div>
+
+    <!-- Hidden container for PDF generation -->
+    <div id="hiddenCaptureContainer"></div>
+
+    <!-- Bootstrap JS Bundle (Required for Tabs) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- html2pdf.js for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- JSZip for ZIP creation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- Chart.js for Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FileSaver for downloading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <!-- Custom Script -->
+    <script src="script.js?v=1.10.0"></script>
+
+</body>
+
+</html>
