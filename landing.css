@@ -211,6 +211,10 @@ header {
     background: linear-gradient(135deg, var(--accent-amber), var(--accent-amber-light));
 }
 
+.bodegas-card .access-btn {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+}
+
 .app-card:hover .access-btn {
     transform: scale(1.05);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
@@ -701,5 +705,8 @@ footer {
 
     .admin-form-body .row {
         flex-direction: column;
+    }
+}
+n;
     }
 }
