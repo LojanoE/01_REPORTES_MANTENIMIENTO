@@ -11,38 +11,15 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css?v=1.8.0">
+    <link rel="stylesheet" href="style.css?v=2.0.0">
 </head>
 
 <body>
 
-    <!-- Login Overlay -->
-    <div id="loginOverlay"
-        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1e293b 0%, #334155 100%); z-index: 10000; display: flex; justify-content: center; align-items: center;">
-        <div
-            style="background: white; padding: 40px; border-radius: 16px; width: 350px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.4); border-top: 5px solid #D97706;">
-            <div style="font-size: 3em; margin-bottom: 15px;">⛏️</div>
-            <h3 style="margin-bottom: 8px; color: #1e293b; font-weight: 700; font-size: 1.5em;">Depósito de Relaves</h3>
-            <p style="color: #D97706; margin-bottom: 20px; font-weight: 600; font-size: 0.95em;">Sistema de Inspección y
-                Monitoreo</p>
-            <p class="text-muted mb-4" style="font-size: 0.8rem;">Versión del Sistema: <span
-                    class="app-version-text">...</span></p>
-            <input type="text" id="loginUser" class="form-control mb-3" placeholder="Usuario"
-                style="border: 1.5px solid #cbd5e1; padding: 10px;">
-            <input type="password" id="loginPass" class="form-control mb-3" placeholder="Contraseña"
-                style="border: 1.5px solid #cbd5e1; padding: 10px;">
-            <button onclick="performLogin()" class="btn btn-primary w-100"
-                style="background: linear-gradient(135deg, #D97706 0%, #B45309 100%); font-weight: 700; padding: 10px; margin-top: 10px;">🔓
-                Iniciar Sesión</button>
-            <div id="loginError"
-                style="color: #dc2626; margin-top: 12px; font-size: 0.9em; display: none; font-weight: 600;">
-                Credenciales incorrectas</div>
-            <button onclick="forceUpdate()" class="btn btn-link btn-sm mt-4 text-decoration-none"
-                style="color: #9ca3af;">Forzar Actualización</button>
-        </div>
-    </div>
+    <!-- User Bar -->
+    <div id="userBar"></div>
 
-    <div class="container main-container" id="mainApp" style="display: none;">
+    <div class="container main-container" id="mainApp">
 
         <!-- Nav Tabs -->
         <ul class="nav nav-tabs" id="appTabs" role="tablist">
@@ -407,7 +384,7 @@
                             </div>
                             <div class="col-md-4 mb-2">
                                 <label for="newUserPassword" class="form-label">Contraseña:</label>
-                                <input type="text" class="form-control" id="newUserPassword" placeholder="Contraseña">
+                                <input type="password" class="form-control" id="newUserPassword" placeholder="Nueva contraseña" autocomplete="new-password">
                             </div>
                             <div class="col-md-2 mb-2">
                                 <label for="newUserRole" class="form-label">Rol:</label>
@@ -430,15 +407,14 @@
                     <table class="table table-hover table-bordered">
                         <thead class="table-dark">
                             <tr>
-                                <th style="width: 20%">Usuario</th>
-                                <th style="width: 20%">Contraseña</th>
-                                <th style="width: 20%">Rol</th>
-                                <th style="width: 20%">Acciones</th>
+                                <th style="width: 30%">Usuario</th>
+                                <th style="width: 25%">Rol</th>
+                                <th style="width: 25%">Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="usersTableBody">
                             <tr>
-                                <td colspan="4" class="text-center">Cargando usuarios...</td>
+                                <td colspan="3" class="text-center">Cargando usuarios...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -465,6 +441,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Auth JS -->
+    <script src="../auth.js?v=2.0.0"></script>
     <!-- JSZip for ZIP creation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <!-- Chart.js for Graphs -->
@@ -476,7 +454,7 @@
     <!-- SheetJS for Excel export -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Custom Script -->
-    <script src="script.js?v=1.10.0"></script>
+    <script src="script.js?v=2.0.0"></script>
 
 </body>
 

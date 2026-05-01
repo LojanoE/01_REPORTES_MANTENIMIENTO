@@ -1,8 +1,8 @@
 // --- APPLICATION VERSIONING ---
-const APP_VERSION = '1.13.3'; // Auto-load pump data (15 days)
+const APP_VERSION = '2.0.0'; // Unified auth system
 
 let levelChartInstance = null;
-let currentUserRole = null; // Store current user role
+let currentSession = null;
 
 function initVersion() {
     document.querySelectorAll('.app-version-text').forEach(el => {
@@ -16,78 +16,37 @@ function forceUpdate() {
     }
 }
 
-window.addEventListener('DOMContentLoaded', initVersion);
+window.addEventListener('DOMContentLoaded', () => {
+    currentSession = Auth.initPage();
+    if (!currentSession) return;
+    supabaseClient = Auth.getSupabaseClient();
+    Auth.renderUserBar('userBar');
+    initVersion();
+    applyRolePermissions(currentSession.role);
+    loadDataByDate();
+});
 
 // --- SUPABASE CONFIGURATION ---
-// Unificado: Usando proyecto de Mantenimiento (dzmhhlsttqygjvfabdxx)
 const SUPABASE_URL = 'https://dzmhhlsttqygjvfabdxx.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_gqH1ZQ9bl--GBVfmcI4Q-A__UvBKemK';
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// --- LOGIN LOGIC ---
-async function performLogin() {
-    const user = document.getElementById('loginUser').value;
-    const pass = document.getElementById('loginPass').value;
-    const errorMsg = document.getElementById('loginError');
-    const btn = document.querySelector('#loginOverlay button');
-
-    errorMsg.style.display = 'none';
-    btn.disabled = true;
-    btn.innerText = 'Verificando...';
-
-    try {
-        const { data, error } = await supabaseClient
-            .from('users')
-            .select('*')
-            .eq('username', user)
-            .maybeSingle();
-
-        if (error) throw error;
-
-        if (data && data.password === pass) {
-            currentUserRole = data.role || 'user'; // Store user role
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            applyRolePermissions(currentUserRole); // Apply role-based permissions
-            loadDataByDate();
-        } else {
-            errorMsg.innerText = "Usuario o contraseña incorrectos";
-            errorMsg.style.display = 'block';
-        }
-    } catch (err) {
-        console.error(err);
-        errorMsg.innerText = "Error de conexión";
-        errorMsg.style.display = 'block';
-    } finally {
-        btn.disabled = false;
-        btn.innerText = 'Entrar';
-    }
-}
+let supabaseClient = null;
 
 // Apply role-based tab visibility
 function applyRolePermissions(role) {
     const verificacionTab = document.getElementById('verificacion-tab');
     const configuracionTab = document.getElementById('configuracion-tab');
 
-    // Reset all tabs to visible first
     if (verificacionTab) verificacionTab.style.display = 'none';
     if (configuracionTab) configuracionTab.style.display = 'none';
 
     if (role === 'admin') {
-        // Admin: All tabs including Configuración
         if (verificacionTab) verificacionTab.style.display = 'block';
         if (configuracionTab) configuracionTab.style.display = 'block';
-        // Load users when admin logs in
         loadUsers();
     } else if (role === 'user') {
-        // User: All tabs except Configuración
         if (verificacionTab) verificacionTab.style.display = 'block';
-    } else if (role === 'viewer') {
-        // Viewer: Only Reportes, Consulta, Bombas, Grafica (NOT Verificación or Configuración)
-        // Verificación stays hidden, Configuración stays hidden
     }
 
-    // Switch to first available tab based on role
     let firstVisibleTab = null;
     if (role === 'admin' || role === 'user') {
         firstVisibleTab = document.getElementById('verificacion-tab');
@@ -100,15 +59,6 @@ function applyRolePermissions(role) {
         tab.show();
     }
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    const loginPass = document.getElementById('loginPass');
-    if (loginPass) {
-        loginPass.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') performLogin();
-        });
-    }
-});
 
 // Checklist Items Data
 const checklistItems = [
@@ -328,7 +278,8 @@ async function saveToDatabase(silent = false) {
             night_shift_person: document.getElementById('nightShiftPerson').value,
             day_remarks: document.getElementById('dayRemarks').value,
             night_remarks: document.getElementById('nightRemarks').value,
-            checklist_data: checklistData
+            checklist_data: checklistData,
+            created_by_name: currentSession ? currentSession.username : 'Sistema'
         };
 
         let result;
@@ -629,15 +580,15 @@ async function loadUsers() {
     const tbody = document.getElementById('usersTableBody');
     if (!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="4" class="text-center">Cargando usuarios...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="3" class="text-center">Cargando usuarios...</td></tr>';
     
     try {
-        const { data, error } = await supabaseClient.from('users').select('*').order('username', { ascending: true });
+        const { data, error } = await supabaseClient.from('users').select('id, username, role').order('username', { ascending: true });
         if (error) throw error;
         
         tbody.innerHTML = '';
         if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center">No hay usuarios registrados</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center">No hay usuarios registrados</td></tr>';
             return;
         }
         
@@ -646,10 +597,9 @@ async function loadUsers() {
             const roleBadge = getRoleBadge(user.role);
             row.innerHTML = `
                 <td><strong>${user.username}</strong></td>
-                <td>${user.password}</td>
                 <td>${roleBadge}</td>
                 <td>
-                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${user.id}, '${user.username}', '${user.password}', '${user.role}')">✏️ Editar</button>
+                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${user.id}, '${user.username}', '${user.role}')">✏️ Editar</button>
                     ${user.username !== 'Admin' ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${user.id})">🗑️ Eliminar</button>` : ''}
                 </td>
             `;
@@ -657,7 +607,7 @@ async function loadUsers() {
         });
     } catch (err) {
         console.error(err);
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error: ' + err.message + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-danger">Error: ' + err.message + '</td></tr>';
     }
 }
 
@@ -670,37 +620,48 @@ function getRoleBadge(role) {
     return badges[role] || '<span class="badge bg-light text-dark">' + role + '</span>';
 }
 
-// Save new user or update existing
 async function saveUser() {
     const userId = document.getElementById('editUserId').value;
     const username = document.getElementById('newUsername').value.trim();
     const password = document.getElementById('newUserPassword').value.trim();
     const role = document.getElementById('newUserRole').value;
     
-    if (!username || !password) {
-        alert('Por favor complete usuario y contraseña.');
+    if (!username) {
+        alert('Por favor ingrese el nombre de usuario.');
+        return;
+    }
+    if (!password && !userId) {
+        alert('Por favor ingrese la contrasena.');
         return;
     }
     
     try {
         if (userId) {
-            // Update existing user
-            const { error } = await supabaseClient.from('users').update({
-                username: username,
-                password: password,
-                role: role
-            }).eq('id', userId);
-            
+            const updateData = { username: username, role: role };
+            if (password) {
+                const salt = Auth.generateSalt();
+                const hash = await Auth.hashPassword(password, salt);
+                updateData.password = password;
+                updateData.password_hash = hash;
+                updateData.salt = salt;
+            }
+            const { error } = await supabaseClient.from('users').update(updateData).eq('id', userId);
             if (error) throw error;
             alert('Usuario actualizado exitosamente.');
         } else {
-            // Insert new user
+            if (!password) {
+                alert('Por favor ingrese la contrasena.');
+                return;
+            }
+            const salt = Auth.generateSalt();
+            const hash = await Auth.hashPassword(password, salt);
             const { error } = await supabaseClient.from('users').insert([{
                 username: username,
                 password: password,
+                password_hash: hash,
+                salt: salt,
                 role: role
             }]);
-            
             if (error) throw error;
             alert('Usuario creado exitosamente.');
         }
@@ -713,11 +674,10 @@ async function saveUser() {
     }
 }
 
-// Edit user - populate form
-function editUser(id, username, password, role) {
+function editUser(id, username, role) {
     document.getElementById('editUserId').value = id;
     document.getElementById('newUsername').value = username;
-    document.getElementById('newUserPassword').value = password;
+    document.getElementById('newUserPassword').value = '';
     document.getElementById('newUserRole').value = role;
     document.getElementById('userFormTitle').innerText = '✏️ Editar Usuario';
     document.getElementById('cancelUserBtn').style.display = 'inline-block';
@@ -749,12 +709,11 @@ function clearUserForm() {
     document.getElementById('cancelUserBtn').style.display = 'none';
 }
 
-// Listen for Configuración tab to load users
 document.addEventListener('DOMContentLoaded', () => {
     const configTab = document.getElementById('configuracion-tab');
     if (configTab) {
         configTab.addEventListener('shown.bs.tab', () => {
-            if (currentUserRole === 'admin') {
+            if (currentSession && currentSession.role === 'admin') {
                 loadUsers();
             }
         });

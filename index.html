@@ -6,10 +6,26 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <title>Portal de Aplicaciones - ECSA</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="landing.css?v=1.0.0">
+    <link rel="stylesheet" href="landing.css?v=2.0.0">
 </head>
 <body>
-    <div class="container-fluid min-vh-100 d-flex flex-column">
+    <!-- Login Overlay -->
+    <div id="loginOverlay">
+        <div class="login-card">
+            <div class="login-icon">&#128272;</div>
+            <h3 class="login-title">Deposito de Relaves</h3>
+            <p class="login-subtitle">Sistema de Gestion de la Calidad</p>
+            <input type="text" id="loginUser" class="form-control login-input" placeholder="Usuario">
+            <input type="password" id="loginPass" class="form-control login-input" placeholder="Contrasena">
+            <button id="loginBtn" class="btn login-btn w-100" onclick="handleLogin()">Iniciar Sesion</button>
+            <div id="loginError" class="login-error"></div>
+        </div>
+    </div>
+
+    <!-- User Bar -->
+    <div id="userBar"></div>
+
+    <div class="container-fluid min-vh-100 d-flex flex-column" id="mainContent" style="display: none;">
         <!-- Header -->
         <header class="py-4 text-center">
             <div class="logo-header d-flex justify-content-center align-items-center gap-4 mb-3">
@@ -17,13 +33,13 @@
                 <img src="LOGO GDR.jpeg" alt="GDR" class="header-logo">
             </div>
             <div class="bilingual-title">
-                <div class="line1">SISTEMA DE GESTIÓN DE LA CALIDAD</div>
-                <div class="line2">质量管理体系</div>
+                <div class="line1">SISTEMA DE GESTI&Oacute;N DE LA CALIDAD</div>
+                <div class="line2">&#36136;&#37327;&#31649;&#29702;&#20307;&#31995;</div>
                 <div class="sep my-2"></div>
                 <div class="line3">
-                    <span class="es">DEPARTAMENTO DE GESTIÓN DE DEPÓSITOS DE RELAVES</span>
+                    <span class="es">DEPARTAMENTO DE GESTI&Oacute;N DE DEP&Oacute;SITOS DE RELAVES</span>
                     <br>
-                    <span class="cn">尾矿库管理部</span>
+                    <span class="cn">&#23614;&#30719;&#24211;&#31649;&#29702;&#37096;</span>
                 </div>
             </div>
         </header>
@@ -37,14 +53,14 @@
                         <a href="MANTENIMIENTO/index.html" class="card-link text-decoration-none">
                             <div class="app-card mantenimiento-card">
                                 <div class="card-icon">
-                                    <span class="icon-emoji">🛠️</span>
+                                    <span class="icon-emoji">&#128295;</span>
                                 </div>
                                 <h2 class="card-title">Sistema de Mantenimiento</h2>
-                                <p class="card-subtitle">维护系统</p>
+                                <p class="card-subtitle">&#32500;&#25252;&#31995;&#32479;</p>
                                 <div class="card-divider"></div>
                                 <p class="card-description">
                                     Registro y consulta de actividades de mantenimiento, 
-                                    asignación de personal y generación de reportes.
+                                    asignaci&oacute;n de personal y generaci&oacute;n de reportes.
                                 </p>
                                 <div class="card-footer">
                                     <span class="access-btn">
@@ -63,14 +79,14 @@
                         <a href="POZOS/index.html" class="card-link text-decoration-none">
                             <div class="app-card pozos-card">
                                 <div class="card-icon">
-                                    <span class="icon-emoji">⛏️</span>
+                                    <span class="icon-emoji">&#9935;&#65039;</span>
                                 </div>
-                                <h2 class="card-title">Inspección de Pozos</h2>
-                                <p class="card-subtitle">排洪井检查系统</p>
+                                <h2 class="card-title">Inspecci&oacute;n de Pozos</h2>
+                                <p class="card-subtitle">&#25490;&#27946;&#20117;&#26816;&#26597;&#31995;&#32479;</p>
                                 <div class="card-divider"></div>
                                 <p class="card-description">
-                                    Gestión de inspecciones de seguridad y medio ambiente 
-                                    de pozos de inundación, turnos y datos técnicos.
+                                    Gesti&oacute;n de inspecciones de seguridad y medio ambiente 
+                                    de pozos de inundaci&oacute;n, turnos y datos t&eacute;cnicos.
                                 </p>
                                 <div class="card-footer">
                                     <span class="access-btn">
@@ -90,11 +106,59 @@
         <!-- Footer -->
         <footer class="py-3 text-center">
             <p class="footer-text">
-                EcuaCorriente S.A. | Departamento de Gestión de Depósitos de Relaves
+                EcuaCorriente S.A. | Departamento de Gesti&oacute;n de Dep&oacute;sitos de Relaves
             </p>
         </footer>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js?v=2.0.0"></script>
+    <script>
+        function handleLogin() {
+            const username = document.getElementById('loginUser').value.trim();
+            const password = document.getElementById('loginPass').value;
+            const errorDiv = document.getElementById('loginError');
+            const btn = document.getElementById('loginBtn');
+
+            if (!username || !password) {
+                errorDiv.textContent = 'Ingrese usuario y contrasena';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            errorDiv.style.display = 'none';
+            btn.disabled = true;
+            btn.textContent = 'Verificando...';
+
+            Auth.login(username, password).then(result => {
+                if (result.success) {
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'flex';
+                    Auth.renderUserBar('userBar');
+                } else {
+                    errorDiv.textContent = result.message;
+                    errorDiv.style.display = 'block';
+                }
+            }).catch(err => {
+                errorDiv.textContent = 'Error de conexion';
+                errorDiv.style.display = 'block';
+            }).finally(() => {
+                btn.disabled = false;
+                btn.textContent = 'Iniciar Sesion';
+            });
+        }
+
+        document.getElementById('loginPass').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleLogin();
+        });
+
+        const session = Auth.getSession();
+        if (session) {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'flex';
+            Auth.renderUserBar('userBar');
+        }
+    </script>
 </body>
 </html>

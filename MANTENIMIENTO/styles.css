@@ -694,3 +694,71 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     display: none !important;
   }
 }
+
+/* ====== AUTH USER BAR ====== */
+#userBar {
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  margin: 0;
+}
+
+.auth-user-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.auth-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.auth-user-icon {
+  font-size: 1.2rem;
+}
+
+.auth-user-name {
+  color: #e5e7eb;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.auth-user-role {
+  color: white;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 9999px;
+  font-weight: 600;
+}
+
+.auth-logout-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+  border-radius: 8px;
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.auth-logout-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+@media (max-width: 480px) {
+  .auth-user-bar {
+    padding: 0.4rem 1rem;
+  }
+  .auth-user-name {
+    font-size: 0.85rem;
+  }
+}

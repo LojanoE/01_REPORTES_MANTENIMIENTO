@@ -6,6 +6,7 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Variables globales
 let todosLosRegistros = [];
 let grafico = null;
+let currentSession = null;
 
 // ===== FUNCIONES AUXILIARES =====
 function formatearFecha(fechaStr) {
@@ -42,7 +43,7 @@ function cargarDatosLocales() {
 function mostrarRegistros(registros) {
     const cuerpoTabla = document.getElementById('cuerpoTabla');
     if (!registros || registros.length === 0) {
-        cuerpoTabla.innerHTML = '<tr><td colspan="7" class="text-center">No hay registros</td></tr>';
+        cuerpoTabla.innerHTML = '<tr><td colspan="8" class="text-center">No hay registros</td></tr>';
         return;
     }
 
@@ -59,6 +60,7 @@ function mostrarRegistros(registros) {
             
         const numeroEcsa = reg.numero_ecsa || 0;
         const numeroContratista = reg.numero_contratista || 0;
+        const creadoPor = reg.created_by_name || '-';
 
         return `
             <tr>
@@ -69,6 +71,7 @@ function mostrarRegistros(registros) {
                 <td>${actividadesHtml}</td>
                 <td>${numeroEcsa}</td>
                 <td>${numeroContratista}</td>
+                <td>${creadoPor}</td>
             </tr>
         `;
     }).join('');
@@ -193,6 +196,7 @@ function exportarAExcel() {
         'Actividades Realizadas': reg.actividades || '',
         'Nº Personas ECSA': reg.numero_ecsa || 0,
         'Nº Personas Contratista': reg.numero_contratista || 0,
+        'Creado por': reg.created_by_name || '-',
     }));
 
     const ws = XLSX.utils.json_to_sheet(datosExcel);
@@ -472,6 +476,10 @@ function cambiarIdioma() {
 
 // ===== INICIALIZACIÓN =====
 document.addEventListener('DOMContentLoaded', function() {
+    currentSession = Auth.initPage();
+    if (!currentSession) return;
+
+    Auth.renderUserBar('userBar');
     // Establecer fecha actual en el formulario
     const now = new Date();
     const year = now.getFullYear();
@@ -612,7 +620,8 @@ document.addEventListener('DOMContentLoaded', function() {
             frente: frente,
             actividades: actividadesSinVinetas,
             numero_ecsa: parseInt(data.numeroEcsa) || 0,
-            numero_contratista: parseInt(data.numeroContratista) || 0
+            numero_contratista: parseInt(data.numeroContratista) || 0,
+            created_by_name: currentSession ? currentSession.username : 'Sistema'
         };
         
         console.log('Datos a enviar a Supabase:', datosParaEnvio);
