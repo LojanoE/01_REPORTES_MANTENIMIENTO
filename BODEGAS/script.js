@@ -10,10 +10,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     await loadInventory();
     await loadTransactions();
-    updateItemSelects();
     populateBodegas();
 
-    document.getElementById('inventorySearch').addEventListener('input', filterInventory);
+    document.getElementById('inventorySearch').addEventListener('input', debounce(filterInventory, 300));
     document.getElementById('bodegaFilter').addEventListener('change', filterInventory);
     document.getElementById('typeFilter').addEventListener('change', filterTransactions);
     document.getElementById('dateFilter').addEventListener('change', filterTransactions);
@@ -21,13 +20,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('itemForm')?.addEventListener('submit', handleNewItem);
     document.getElementById('ingresoForm')?.addEventListener('submit', handleNewIngreso);
     document.getElementById('egresoForm')?.addEventListener('submit', handleNewEgreso);
+    document.getElementById('loadMoreBtn')?.addEventListener('click', loadMoreTransactions);
 
+    document.getElementById('ingresoBodega')?.addEventListener('change', () => {
+        filterItemsByBodega('ingresoItem', 'ingresoBodega');
+        document.getElementById('ingresoItemInfo').textContent = '';
+    });
+    document.getElementById('egresoBodega')?.addEventListener('change', () => {
+        filterItemsByBodega('egresoItem', 'egresoBodega');
+        document.getElementById('egresoItemInfo').textContent = '';
+        document.getElementById('egresoStockInfo').textContent = '';
+    });
     document.getElementById('ingresoItem')?.addEventListener('change', onIngresoItemChange);
     document.getElementById('egresoItem')?.addEventListener('change', onEgresoItemChange);
 });
 
 let inventoryData = [];
-let transactionsData = [];
+let allTransactions = [];
+let filteredTransactions = [];
+let transRendered = 0;
+const TRANS_BATCH = 100;
 
 const BODEGAS = [
     'Bodega GDR 1 (MV)',
@@ -47,6 +59,14 @@ const BODEGAS = [
     'Unidad de Operacion, Mantenimiento y Vigilancia',
     'Unidad de Construccion, Control de Calidad & Laboratorio'
 ];
+
+function debounce(fn, ms) {
+    let timer;
+    return function(...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), ms);
+    };
+}
 
 function populateBodegas() {
     const selects = ['bodegaFilter', 'transBodegaFilter', 'itemBodega', 'ingresoBodega', 'egresoBodega'];
@@ -69,33 +89,33 @@ function populateBodegas() {
     });
 }
 
-function updateItemSelects() {
-    const byBodega = {};
-    inventoryData.forEach(item => {
-        const key = item.bodega || 'Sin bodega';
-        if (!byBodega[key]) byBodega[key] = [];
-        byBodega[key].push(item);
+function filterItemsByBodega(selectId, bodegaSelectId) {
+    const bodega = document.getElementById(bodegaSelectId).value;
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    const items = bodega
+        ? inventoryData.filter(i => i.bodega === bodega)
+        : inventoryData;
+
+    const fragment = document.createDocumentFragment();
+
+    const defaultOpt = document.createElement('option');
+    defaultOpt.value = '';
+    defaultOpt.textContent = items.length > 0
+        ? `Seleccione (${items.length} items)...`
+        : 'No hay items en esta bodega';
+    fragment.appendChild(defaultOpt);
+
+    items.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.id;
+        opt.textContent = `[${item.code}] ${item.description} (${item.current_stock || 0} ${item.unit || 'und'})`;
+        fragment.appendChild(opt);
     });
 
-    const bodegaOrder = Object.keys(byBodega).sort();
-
-    ['ingresoItem', 'egresoItem'].forEach(id => {
-        const select = document.getElementById(id);
-        if (!select) return;
-        select.innerHTML = '<option value="">Seleccione un articulo...</option>';
-
-        bodegaOrder.forEach(bodega => {
-            const group = document.createElement('optgroup');
-            group.label = bodega;
-            byBodega[bodega].forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item.id;
-                opt.textContent = `[${item.code}] ${item.description} (${item.current_stock || 0} ${item.unit || 'und'})`;
-                group.appendChild(opt);
-            });
-            select.appendChild(group);
-        });
-    });
+    select.innerHTML = '';
+    select.appendChild(fragment);
 }
 
 function onIngresoItemChange() {
@@ -104,9 +124,10 @@ function onIngresoItemChange() {
     const info = document.getElementById('ingresoItemInfo');
 
     if (item) {
-        info.innerHTML = `<strong>${item.description}</strong> ${item.specifications ? '| ' + item.specifications.substring(0, 50) : ''} | Stock: ${item.current_stock} ${item.unit || 'UND'} | Bodega: ${item.bodega || '-'}`;
-        if (item.bodega) {
-            document.getElementById('ingresoBodega').value = item.bodega;
+        info.innerHTML = `<strong>${item.description}</strong>${item.specifications ? ' | ' + item.specifications.substring(0, 50) : ''} | Stock: <strong>${item.current_stock}</strong> ${item.unit || 'UND'} | Bodega: ${item.bodega || '-'}`;
+        const bodegaSelect = document.getElementById('ingresoBodega');
+        if (!bodegaSelect.value && item.bodega) {
+            bodegaSelect.value = item.bodega;
         }
     } else {
         info.textContent = '';
@@ -127,11 +148,12 @@ function onEgresoItemChange() {
         else if (stock <= min) badge = '<span class="badge bg-warning text-dark">STOCK BAJO</span>';
         else badge = '<span class="badge bg-success">OK</span>';
 
-        infoEl.innerHTML = `${item.specifications ? item.specifications.substring(0, 50) + ' | ' : ''}Bodega: ${item.bodega || '-'} | Ubicaci\u00f3n: ${item.location || '-'}`;
+        infoEl.innerHTML = `${item.specifications ? item.specifications.substring(0, 40) + ' | ' : ''}Bodega: <strong>${item.bodega || '-'}</strong> | Ubicaci\u00f3n: ${item.location || '-'}`;
         stockEl.innerHTML = `Stock: <strong>${stock}</strong> ${item.unit || 'UND'} ${badge}`;
 
-        if (item.bodega) {
-            document.getElementById('egresoBodega').value = item.bodega;
+        const bodegaSelect = document.getElementById('egresoBodega');
+        if (!bodegaSelect.value && item.bodega) {
+            bodegaSelect.value = item.bodega;
         }
     } else {
         infoEl.textContent = '';
@@ -160,46 +182,45 @@ async function loadInventory() {
 
 function renderInventory(items) {
     const tbody = document.getElementById('inventoryTableBody');
-    tbody.innerHTML = '';
 
     if (items.length === 0) {
         tbody.innerHTML = '<tr><td colspan="10" class="text-center">No se encontraron articulos</td></tr>';
         return;
     }
 
+    const fragment = document.createDocumentFragment();
+
     items.forEach(item => {
         let statusBadge = '';
         const stock = parseFloat(item.current_stock) || 0;
         const min = parseFloat(item.min_stock) || 0;
 
-        if (stock <= 0) {
-            statusBadge = '<span class="badge bg-danger">Sin Stock</span>';
-        } else if (stock <= min) {
-            statusBadge = '<span class="badge bg-warning text-dark">Stock Bajo</span>';
-        } else {
-            statusBadge = '<span class="badge bg-success">Normal</span>';
-        }
+        if (stock <= 0) statusBadge = '<span class="badge bg-danger">Sin Stock</span>';
+        else if (stock <= min) statusBadge = '<span class="badge bg-warning text-dark">Stock Bajo</span>';
+        else statusBadge = '<span class="badge bg-success">Normal</span>';
 
         const specShort = (item.specifications || '').length > 30
             ? item.specifications.substring(0, 30) + '...'
             : (item.specifications || '-');
 
-        const row = `
-            <tr>
-                <td><code>${item.code}</code></td>
-                <td><strong>${item.description}</strong></td>
-                <td><small>${specShort}</small></td>
-                <td><span class="badge bg-info text-dark">${item.bodega || '-'}</span></td>
-                <td>${item.unit}</td>
-                <td class="text-center">${parseFloat(item.initial_stock) || 0}</td>
-                <td class="text-center"><strong>${stock}</strong></td>
-                <td class="text-center text-secondary">${min}</td>
-                <td><small>${item.location || '-'}</small></td>
-                <td class="text-center">${statusBadge}</td>
-            </tr>
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><code>${item.code}</code></td>
+            <td><strong>${item.description}</strong></td>
+            <td class="hide-mobile"><small>${specShort}</small></td>
+            <td><span class="badge bg-info text-dark">${item.bodega || '-'}</span></td>
+            <td class="hide-mobile">${item.unit}</td>
+            <td class="text-center hide-mobile">${parseFloat(item.initial_stock) || 0}</td>
+            <td class="text-center"><strong>${stock}</strong></td>
+            <td class="text-center hide-mobile">${min}</td>
+            <td class="hide-mobile"><small>${item.location || '-'}</small></td>
+            <td class="text-center">${statusBadge}</td>
         `;
-        tbody.innerHTML += row;
+        fragment.appendChild(tr);
     });
+
+    tbody.innerHTML = '';
+    tbody.appendChild(fragment);
 }
 
 function filterInventory() {
@@ -224,52 +245,16 @@ async function loadTransactions() {
         const db = Auth.getSupabaseClient();
         const { data, error } = await db
             .from('bodegas_transactions')
-            .select(`
-                *,
-                bodegas_inventory (code, description, bodega, unit)
-            `)
+            .select('*, bodegas_inventory(code, description, bodega, unit)')
             .order('created_at', { ascending: false });
 
         if (error) throw error;
-        transactionsData = data || [];
-        renderTransactions(transactionsData);
+        allTransactions = data || [];
+        transRendered = 0;
+        filterTransactions();
     } catch (err) {
         console.error('Error al cargar movimientos:', err);
     }
-}
-
-function renderTransactions(trans) {
-    const tbody = document.getElementById('transactionsTableBody');
-    tbody.innerHTML = '';
-
-    trans.forEach(t => {
-        const typeBadge = t.type === 'IN' ?
-            '<span class="text-success">&#8593; INGRESO</span>' :
-            '<span class="text-danger">&#8595; EGRESO</span>';
-
-        const timeStr = t.time ? ` ${t.time}` : '';
-        const dateStr = t.date ? new Date(t.date + 'T00:00:00').toLocaleDateString() : new Date(t.created_at).toLocaleDateString();
-
-        const row = `
-            <tr>
-                <td>${dateStr}</td>
-                <td>${timeStr || '-'}</td>
-                <td>
-                    <div class="small text-secondary">${t.bodegas_inventory?.code || '-'}</div>
-                    <div>${t.bodegas_inventory?.description || '-'}</div>
-                </td>
-                <td><small>${t.bodega || t.bodegas_inventory?.bodega || '-'}</small></td>
-                <td>${typeBadge}</td>
-                <td class="text-center"><strong>${t.quantity}</strong></td>
-                <td><small>${t.received_by || '-'}</small></td>
-                <td><small>${t.dispatched_by || '-'}</small></td>
-                <td><small>${t.voucher_code || '-'}</small></td>
-                <td><small>${t.location || '-'}</small></td>
-                <td><small>${t.notes || '-'}</small></td>
-            </tr>
-        `;
-        tbody.innerHTML += row;
-    });
 }
 
 function filterTransactions() {
@@ -277,14 +262,70 @@ function filterTransactions() {
     const date = document.getElementById('dateFilter').value;
     const bodega = document.getElementById('transBodegaFilter').value;
 
-    const filtered = transactionsData.filter(t => {
+    filteredTransactions = allTransactions.filter(t => {
         const matchesType = type === "" || t.type === type;
         const matchesDate = date === "" || (t.date && t.date.startsWith(date));
-        const matchesBodega = bodega === "" || t.bodega === bodega;
+        const matchesBodega = bodega === "" || t.bodega === bodega || t.bodegas_inventory?.bodega === bodega;
         return matchesType && matchesDate && matchesBodega;
     });
 
-    renderTransactions(filtered);
+    transRendered = 0;
+    renderTransactionsBatch();
+}
+
+function renderTransactionsBatch() {
+    const tbody = document.getElementById('transactionsTableBody');
+    const end = Math.min(transRendered + TRANS_BATCH, filteredTransactions.length);
+    const batch = filteredTransactions.slice(transRendered, end);
+
+    const fragment = document.createDocumentFragment();
+
+    batch.forEach(t => {
+        const typeBadge = t.type === 'IN' ?
+            '<span class="text-success">&#8593; INGRESO</span>' :
+            '<span class="text-danger">&#8595; EGRESO</span>';
+
+        const timeStr = t.time ? ` ${t.time}` : '';
+        const dateStr = t.date ? new Date(t.date + 'T00:00:00').toLocaleDateString() : new Date(t.created_at).toLocaleDateString();
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${dateStr}</td>
+            <td class="hide-mobile">${timeStr || '-'}</td>
+            <td>
+                <div class="small text-secondary">${t.bodegas_inventory?.code || '-'}</div>
+                <div>${t.bodegas_inventory?.description || '-'}</div>
+            </td>
+            <td><small>${t.bodega || t.bodegas_inventory?.bodega || '-'}</small></td>
+            <td>${typeBadge}</td>
+            <td class="text-center"><strong>${t.quantity}</strong></td>
+            <td class="hide-mobile"><small>${t.received_by || '-'}</small></td>
+            <td class="hide-mobile"><small>${t.dispatched_by || '-'}</small></td>
+            <td class="hide-mobile"><small>${t.voucher_code || '-'}</small></td>
+            <td class="hide-mobile"><small>${t.location || '-'}</small></td>
+            <td class="hide-mobile"><small>${t.notes || '-'}</small></td>
+        `;
+        fragment.appendChild(tr);
+    });
+
+    if (transRendered === 0) {
+        tbody.innerHTML = '';
+    }
+    tbody.appendChild(fragment);
+    transRendered = end;
+
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const transCount = document.getElementById('transCount');
+    if (loadMoreBtn) {
+        loadMoreBtn.style.display = transRendered < filteredTransactions.length ? 'block' : 'none';
+    }
+    if (transCount) {
+        transCount.textContent = `Mostrando ${transRendered} de ${filteredTransactions.length} movimientos`;
+    }
+}
+
+function loadMoreTransactions() {
+    renderTransactionsBatch();
 }
 
 // ==================== GESTION ====================
@@ -306,7 +347,7 @@ async function handleNewItem(e) {
         unit: document.getElementById('itemUnit').value.trim() || 'UND',
         min_stock: parseFloat(document.getElementById('itemMinStock').value) || 0,
         location: document.getElementById('itemLocation').value.trim(),
-        excel_unique_id: code + bodega,
+        excel_unique_id: code + '-' + bodega,
         initial_stock: 0,
         current_stock: 0
     };
@@ -319,7 +360,9 @@ async function handleNewItem(e) {
         alert('Articulo registrado con exito en ' + bodega);
         e.target.reset();
         await loadInventory();
-        updateItemSelects();
+        populateBodegas();
+        filterItemsByBodega('ingresoItem', 'ingresoBodega');
+        filterItemsByBodega('egresoItem', 'egresoBodega');
     } catch (err) {
         alert('Error: ' + err.message);
     }
@@ -359,7 +402,7 @@ async function handleNewIngreso(e) {
         document.getElementById('ingresoItemInfo').textContent = '';
         await loadInventory();
         await loadTransactions();
-        updateItemSelects();
+        filterItemsByBodega('ingresoItem', 'ingresoBodega');
     } catch (err) {
         alert('Error: ' + err.message);
     }
@@ -406,7 +449,7 @@ async function handleNewEgreso(e) {
         document.getElementById('egresoStockInfo').textContent = '';
         await loadInventory();
         await loadTransactions();
-        updateItemSelects();
+        filterItemsByBodega('egresoItem', 'egresoBodega');
     } catch (err) {
         alert('Error: ' + err.message);
     }
@@ -415,9 +458,9 @@ async function handleNewEgreso(e) {
 // ==================== EXPORTAR ====================
 
 function exportToExcel() {
-    if (transactionsData.length === 0) return alert('No hay datos para exportar');
+    if (filteredTransactions.length === 0) return alert('No hay datos para exportar');
 
-    const dataToExport = transactionsData.map(t => ({
+    const dataToExport = filteredTransactions.map(t => ({
         Fecha: t.date || '',
         Hora: t.time || '',
         Codigo: t.bodegas_inventory?.code || '',

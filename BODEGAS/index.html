@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control de Bodegas - GDR</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=1.0.0">
+    <link rel="stylesheet" href="style.css?v=2.0.0">
 </head>
 <body>
     <div id="userBar"></div>
@@ -58,13 +58,13 @@
                                     <tr>
                                         <th>C&oacute;digo</th>
                                         <th>Descripci&oacute;n</th>
-                                        <th>Especificaciones</th>
+                                        <th class="hide-mobile">Especificaciones</th>
                                         <th>Bodega</th>
-                                        <th>Unidad</th>
-                                        <th class="text-center">Stock Inicial</th>
-                                        <th class="text-center">Stock Actual</th>
-                                        <th class="text-center">M&iacute;n.</th>
-                                        <th>Ubicaci&oacute;n</th>
+                                        <th class="hide-mobile">Unidad</th>
+                                        <th class="hide-mobile">Stock Inicial</th>
+                                        <th class="text-center">Stock</th>
+                                        <th class="hide-mobile text-center">M&iacute;n.</th>
+                                        <th class="hide-mobile">Ubicaci&oacute;n</th>
                                         <th class="text-center">Estado</th>
                                     </tr>
                                 </thead>
@@ -101,27 +101,31 @@
                                 <button class="btn btn-outline-success w-100" onclick="exportToExcel()">Exportar a Excel</button>
                             </div>
                         </div>
+                        <small id="transCount" class="text-secondary d-block mb-2"></small>
                         <div class="table-responsive">
                             <table class="table table-dark table-hover table-sm align-middle">
                                 <thead>
                                     <tr>
                                         <th>Fecha</th>
-                                        <th>Hora</th>
+                                        <th class="hide-mobile">Hora</th>
                                         <th>Item</th>
                                         <th>Bodega</th>
                                         <th>Tipo</th>
-                                        <th class="text-center">Cantidad</th>
-                                        <th>Recibido por</th>
-                                        <th>Despachado por</th>
-                                        <th>Vale</th>
-                                        <th>Ubicaci&oacute;n</th>
-                                        <th>Notas</th>
+                                        <th class="text-center">Cant.</th>
+                                        <th class="hide-mobile">Recibido</th>
+                                        <th class="hide-mobile">Despachado</th>
+                                        <th class="hide-mobile">Vale</th>
+                                        <th class="hide-mobile">Ubicaci&oacute;n</th>
+                                        <th class="hide-mobile">Notas</th>
                                     </tr>
                                 </thead>
                                 <tbody id="transactionsTableBody">
                                     <tr><td colspan="11" class="text-center">Cargando movimientos...</td></tr>
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <button id="loadMoreBtn" class="btn btn-outline-light" style="display:none;">Cargar m&aacute;s movimientos</button>
                         </div>
                     </div>
                 </div>
@@ -152,8 +156,8 @@
                                     </div>
                                     <div class="row mb-3">
                                         <div class="col-md-6">
-                                            <label class="form-label">Bodega</label>
-                                            <select id="itemBodega" class="form-select bg-dark text-light border-secondary">
+                                            <label class="form-label">Bodega <span class="text-danger">*</span></label>
+                                            <select id="itemBodega" class="form-select bg-dark text-light border-secondary" required>
                                                 <option value="">Seleccionar...</option>
                                             </select>
                                         </div>
@@ -190,25 +194,25 @@
                                     <div class="card-body">
                                         <form id="ingresoForm">
                                             <div class="row g-3">
-                                                <div class="col-md-4">
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Bodega <span class="text-danger">*</span></label>
+                                                    <select id="ingresoBodega" class="form-select bg-dark text-light border-secondary">
+                                                        <option value="">Seleccionar bodega...</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-5">
                                                     <label class="form-label">Art&iacute;culo</label>
                                                     <select id="ingresoItem" class="form-select bg-dark text-light border-secondary" required>
-                                                        <option value="">Seleccione...</option>
+                                                        <option value="">Seleccione bodega primero...</option>
                                                     </select>
-                                                    <small id="ingresoItemInfo" class="text-info"></small>
+                                                    <small id="ingresoItemInfo" class="text-info d-block mt-1"></small>
                                                 </div>
                                                 <div class="col-md-2">
                                                     <label class="form-label">Cantidad</label>
                                                     <input type="number" id="ingresoQty" class="form-control bg-dark text-light border-secondary" required min="0.01" step="0.01">
                                                 </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label">Bodega</label>
-                                                    <select id="ingresoBodega" class="form-select bg-dark text-light border-secondary">
-                                                        <option value="">Seleccionar...</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label">C&oacute;digo de Vale</label>
+                                                <div class="col-md-2">
+                                                    <label class="form-label">C&oacute;digo Vale</label>
                                                     <input type="text" id="ingresoVoucher" class="form-control bg-dark text-light border-secondary">
                                                 </div>
                                                 <div class="col-md-3">
@@ -245,26 +249,26 @@
                                     <div class="card-body">
                                         <form id="egresoForm">
                                             <div class="row g-3">
-                                                <div class="col-md-4">
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Bodega <span class="text-danger">*</span></label>
+                                                    <select id="egresoBodega" class="form-select bg-dark text-light border-secondary">
+                                                        <option value="">Seleccionar bodega...</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-5">
                                                     <label class="form-label">Art&iacute;culo</label>
                                                     <select id="egresoItem" class="form-select bg-dark text-light border-secondary" required>
-                                                        <option value="">Seleccione...</option>
+                                                        <option value="">Seleccione bodega primero...</option>
                                                     </select>
-                                                    <small id="egresoItemInfo" class="text-warning"></small>
-                                                    <small id="egresoStockInfo" class="text-muted d-block"></small>
+                                                    <small id="egresoItemInfo" class="text-warning d-block mt-1"></small>
+                                                    <small id="egresoStockInfo" class="d-block"></small>
                                                 </div>
                                                 <div class="col-md-2">
                                                     <label class="form-label">Cantidad</label>
                                                     <input type="number" id="egresoQty" class="form-control bg-dark text-light border-secondary" required min="0.01" step="0.01">
                                                 </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label">Bodega</label>
-                                                    <select id="egresoBodega" class="form-select bg-dark text-light border-secondary">
-                                                        <option value="">Seleccionar...</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label">Responsable de Egreso</label>
+                                                <div class="col-md-2">
+                                                    <label class="form-label">Responsable</label>
                                                     <input type="text" id="egresoResponsible" class="form-control bg-dark text-light border-secondary">
                                                 </div>
                                                 <div class="col-md-3">

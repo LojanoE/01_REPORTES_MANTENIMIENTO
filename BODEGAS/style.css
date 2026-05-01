@@ -28,7 +28,6 @@ body {
     letter-spacing: 4px;
 }
 
-/* Tabs Styling */
 .nav-tabs {
     border-bottom: 2px solid var(--border-color);
 }
@@ -38,7 +37,7 @@ body {
     border: none !important;
     padding: 12px 25px;
     font-weight: 500;
-    transition: all 0.3s ease;
+    transition: color 0.2s ease, background-color 0.2s ease;
 }
 
 .nav-link:hover {
@@ -52,7 +51,6 @@ body {
     border-bottom: 3px solid var(--accent) !important;
 }
 
-/* Cards */
 .card {
     background-color: var(--card-bg) !important;
     border-radius: 12px;
@@ -63,10 +61,9 @@ body {
     background-color: rgba(0, 0, 0, 0.1) !important;
 }
 
-/* Table Styling */
 .table {
     border-collapse: separate;
-    border-spacing: 0 8px;
+    border-spacing: 0 4px;
 }
 
 .table thead th {
@@ -76,22 +73,22 @@ body {
     text-transform: uppercase;
     font-size: 0.8rem;
     letter-spacing: 1px;
+    white-space: nowrap;
 }
 
 .table tbody tr {
     background-color: rgba(255, 255, 255, 0.03);
-    transition: transform 0.2s ease;
 }
 
 .table tbody tr:hover {
     background-color: rgba(255, 255, 255, 0.07) !important;
-    transform: scale(1.002);
 }
 
 .table td {
-    padding: 15px;
+    padding: 10px 12px;
     border-top: 1px solid var(--border-color);
     border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
 }
 
 .table td:first-child {
@@ -106,7 +103,6 @@ body {
     border-bottom-right-radius: 8px;
 }
 
-/* Badges */
 .badge-stock {
     padding: 6px 12px;
     border-radius: 6px;
@@ -117,7 +113,6 @@ body {
 .badge-low { background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; }
 .badge-out { background-color: rgba(239, 68, 68, 0.2); color: #f87171; }
 
-/* Inputs */
 .form-control, .form-select {
     border: 1px solid var(--border-color);
     padding: 10px 15px;
@@ -130,12 +125,10 @@ body {
     box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
 }
 
-/* Admin Restrictions */
 .admin-only {
     display: none;
 }
 
-/* User Bar (from Auth) */
 .auth-user-bar {
     background: var(--card-bg);
     padding: 10px 20px;
@@ -144,4 +137,97 @@ body {
     align-items: center;
     border-bottom: 1px solid var(--border-color);
     margin-bottom: 20px;
+}
+
+#loadMoreBtn {
+    border-radius: 20px;
+    padding: 8px 30px;
+}
+
+#transCount {
+    font-size: 0.85rem;
+}
+
+.text-info {
+    color: #38bdf8 !important;
+}
+
+.text-warning {
+    color: #fbbf24 !important;
+}
+
+/* ==================== RESPONSIVE MOVIL ==================== */
+@media (max-width: 768px) {
+    .hide-mobile {
+        display: none !important;
+    }
+
+    .main-title {
+        font-size: 1.3rem;
+        letter-spacing: 1px;
+    }
+
+    .subtitle {
+        font-size: 0.8rem;
+        letter-spacing: 2px;
+    }
+
+    .nav-link {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+
+    .card-body {
+        padding: 0.75rem;
+    }
+
+    .row.g-3 > * {
+        margin-bottom: 0.25rem;
+    }
+
+    .table thead th {
+        font-size: 0.7rem;
+        padding: 6px 4px;
+    }
+
+    .table td {
+        padding: 6px 4px;
+        font-size: 0.75rem;
+    }
+
+    .table td:first-child,
+    .table td:last-child {
+        border-radius: 4px;
+    }
+
+    .badge {
+        font-size: 0.6rem;
+        padding: 3px 6px;
+    }
+
+    code {
+        font-size: 0.7rem;
+    }
+
+    .small {
+        font-size: 0.7rem !important;
+    }
+
+    h5 {
+        font-size: 0.95rem;
+    }
+
+    .btn {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+    }
+
+    .form-control, .form-select {
+        padding: 8px 10px;
+        font-size: 0.85rem;
+    }
+
+    form .row.g-3 > div {
+        margin-bottom: 0.5rem;
+    }
 }
