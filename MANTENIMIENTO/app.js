@@ -480,6 +480,27 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!currentSession) return;
 
     Auth.renderUserBar('userBar');
+
+    // Role-based permissions: viewer can only see Consulta tab
+    if (currentSession.role === 'viewer') {
+        const registroTab = document.getElementById('registro-tab');
+        const registroPane = document.getElementById('registro');
+        if (registroTab) registroTab.style.display = 'none';
+        if (registroPane) {
+            registroPane.classList.remove('show', 'active');
+        }
+        const consultaPane = document.getElementById('consulta');
+        if (consultaPane) {
+            consultaPane.classList.add('show', 'active');
+        }
+        const consultaTab = document.getElementById('consulta-tab');
+        if (consultaTab) {
+            consultaTab.classList.add('active');
+        }
+        // Hide the submit button area in the form just in case
+        const submitBtn = document.querySelector('#mantenimientoForm button[type="submit"]');
+        if (submitBtn) submitBtn.closest('form').style.display = 'none';
+    }
     // Establecer fecha actual en el formulario
     const now = new Date();
     const year = now.getFullYear();

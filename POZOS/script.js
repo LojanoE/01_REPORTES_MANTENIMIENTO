@@ -34,16 +34,10 @@ let supabaseClient = null;
 // Apply role-based tab visibility
 function applyRolePermissions(role) {
     const verificacionTab = document.getElementById('verificacion-tab');
-    const configuracionTab = document.getElementById('configuracion-tab');
 
     if (verificacionTab) verificacionTab.style.display = 'none';
-    if (configuracionTab) configuracionTab.style.display = 'none';
 
-    if (role === 'admin') {
-        if (verificacionTab) verificacionTab.style.display = 'block';
-        if (configuracionTab) configuracionTab.style.display = 'block';
-        loadUsers();
-    } else if (role === 'user') {
+    if (role === 'admin' || role === 'user') {
         if (verificacionTab) verificacionTab.style.display = 'block';
     }
 
@@ -573,149 +567,20 @@ async function renderWaterLevelChart() {
     } catch (err) { console.error(err); alert(err.message); }
 }
 
-// ==================== USER MANAGEMENT FUNCTIONS (CONFIGURACIÓN) ====================
-
-// Load all users into the table
-async function loadUsers() {
-    const tbody = document.getElementById('usersTableBody');
-    if (!tbody) return;
-    
-    tbody.innerHTML = '<tr><td colspan="3" class="text-center">Cargando usuarios...</td></tr>';
-    
-    try {
-        const { data, error } = await supabaseClient.from('users').select('id, username, role').order('username', { ascending: true });
-        if (error) throw error;
-        
-        tbody.innerHTML = '';
-        if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" class="text-center">No hay usuarios registrados</td></tr>';
-            return;
-        }
-        
-        data.forEach(user => {
-            const row = document.createElement('tr');
-            const roleBadge = getRoleBadge(user.role);
-            row.innerHTML = `
-                <td><strong>${user.username}</strong></td>
-                <td>${roleBadge}</td>
-                <td>
-                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${user.id}, '${user.username}', '${user.role}')">✏️ Editar</button>
-                    ${user.username !== 'Admin' ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${user.id})">🗑️ Eliminar</button>` : ''}
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
-    } catch (err) {
-        console.error(err);
-        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-danger">Error: ' + err.message + '</td></tr>';
-    }
-}
-
-function getRoleBadge(role) {
-    const badges = {
-        'admin': '<span class="badge bg-danger">Admin</span>',
-        'user': '<span class="badge bg-primary">User</span>',
-        'viewer': '<span class="badge bg-secondary">Viewer</span>'
-    };
-    return badges[role] || '<span class="badge bg-light text-dark">' + role + '</span>';
-}
-
-async function saveUser() {
-    const userId = document.getElementById('editUserId').value;
-    const username = document.getElementById('newUsername').value.trim();
-    const password = document.getElementById('newUserPassword').value.trim();
-    const role = document.getElementById('newUserRole').value;
-    
-    if (!username) {
-        alert('Por favor ingrese el nombre de usuario.');
-        return;
-    }
-    if (!password && !userId) {
-        alert('Por favor ingrese la contrasena.');
-        return;
-    }
-    
-    try {
-        if (userId) {
-            const updateData = { username: username, role: role };
-            if (password) {
-                const salt = Auth.generateSalt();
-                const hash = await Auth.hashPassword(password, salt);
-                updateData.password = password;
-                updateData.password_hash = hash;
-                updateData.salt = salt;
-            }
-            const { error } = await supabaseClient.from('users').update(updateData).eq('id', userId);
-            if (error) throw error;
-            alert('Usuario actualizado exitosamente.');
-        } else {
-            if (!password) {
-                alert('Por favor ingrese la contrasena.');
-                return;
-            }
-            const salt = Auth.generateSalt();
-            const hash = await Auth.hashPassword(password, salt);
-            const { error } = await supabaseClient.from('users').insert([{
-                username: username,
-                password: password,
-                password_hash: hash,
-                salt: salt,
-                role: role
-            }]);
-            if (error) throw error;
-            alert('Usuario creado exitosamente.');
-        }
-        
-        clearUserForm();
-        loadUsers();
-    } catch (err) {
-        console.error(err);
-        alert('Error: ' + err.message);
-    }
-}
-
-function editUser(id, username, role) {
-    document.getElementById('editUserId').value = id;
-    document.getElementById('newUsername').value = username;
-    document.getElementById('newUserPassword').value = '';
-    document.getElementById('newUserRole').value = role;
-    document.getElementById('userFormTitle').innerText = '✏️ Editar Usuario';
-    document.getElementById('cancelUserBtn').style.display = 'inline-block';
-}
-
-// Delete user
-async function deleteUser(id) {
-    if (!confirm('¿Está seguro de eliminar este usuario?')) return;
-    
-    try {
-        const { error } = await supabaseClient.from('users').delete().eq('id', id);
-        if (error) throw error;
-        
-        alert('Usuario eliminado exitosamente.');
-        loadUsers();
-    } catch (err) {
-        console.error(err);
-        alert('Error: ' + err.message);
-    }
-}
-
-// Clear user form
-function clearUserForm() {
-    document.getElementById('editUserId').value = '';
-    document.getElementById('newUsername').value = '';
-    document.getElementById('newUserPassword').value = '';
-    document.getElementById('newUserRole').value = 'viewer';
-    document.getElementById('userFormTitle').innerText = '➕ Nuevo Usuario';
-    document.getElementById('cancelUserBtn').style.display = 'none';
-}
-
 document.addEventListener('DOMContentLoaded', () => {
-    const configTab = document.getElementById('configuracion-tab');
-    if (configTab) {
-        configTab.addEventListener('shown.bs.tab', () => {
-            if (currentSession && currentSession.role === 'admin') {
-                loadUsers();
+    const bombasTabEl = document.getElementById('bombas-tab');
+    if (bombasTabEl) {
+        bombasTabEl.addEventListener('shown.bs.tab', () => {
+            const startInput = document.getElementById('pumpStartDate');
+            const endInput = document.getElementById('pumpEndDate');
+            if (startInput && endInput && (!startInput.value || !endInput.value)) {
+                const today = new Date();
+                const twoWeeksAgo = new Date();
+                twoWeeksAgo.setDate(today.getDate() - 14);
+                startInput.valueAsDate = twoWeeksAgo;
+                endInput.valueAsDate = today;
             }
+            loadPumpRecordsReport();
         });
     }
 });

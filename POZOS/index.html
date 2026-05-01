@@ -44,10 +44,6 @@
                 <button class="nav-link" id="grafica-tab" data-bs-toggle="tab" data-bs-target="#grafica" type="button"
                     role="tab" aria-controls="grafica" aria-selected="false">Gráfica de Niveles</button>
             </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="configuracion-tab" data-bs-toggle="tab" data-bs-target="#configuracion" type="button"
-                    role="tab" aria-controls="configuracion" aria-selected="false" style="display: none;">⚙️ Configuración</button>
-            </li>
         </ul>
 
         <!-- Tab Content -->
@@ -352,75 +348,7 @@
                 </div>
             </div>
 
-            <!-- Tab: Configuración (Solo Admin) -->
-            <div class="tab-pane fade" id="configuracion" role="tabpanel" aria-labelledby="configuracion-tab">
-                <h1>
-                    <span class="zh-text">⚙️ 系统配置 - 用户管理</span>
-                    <span class="es-text">⚙️ Configuración del Sistema - Gestión de Usuarios</span>
-                </h1>
-
-                <div class="card bg-light border-warning mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">🔐 Gestión de Usuarios y Roles</h5>
-                        <p class="card-text text-muted">
-                            <strong>Admin:</strong> Acceso completo incluyendo Configuración.<br>
-                            <strong>User:</strong> Acceso a todo excepto Configuración.<br>
-                            <strong>Viewer:</strong> Acceso solo a Reportes, Consulta, Bombas y Gráfica (no Verificación ni Configuración).
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Formulario de Usuario -->
-                <div class="card mb-3">
-                    <div class="card-header bg-primary text-white">
-                        <strong id="userFormTitle">➕ Nuevo Usuario</strong>
-                    </div>
-                    <div class="card-body">
-                        <input type="hidden" id="editUserId">
-                        <div class="row">
-                            <div class="col-md-4 mb-2">
-                                <label for="newUsername" class="form-label">Usuario:</label>
-                                <input type="text" class="form-control" id="newUsername" placeholder="Nombre de usuario">
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label for="newUserPassword" class="form-label">Contraseña:</label>
-                                <input type="password" class="form-control" id="newUserPassword" placeholder="Nueva contraseña" autocomplete="new-password">
-                            </div>
-                            <div class="col-md-2 mb-2">
-                                <label for="newUserRole" class="form-label">Rol:</label>
-                                <select class="form-select" id="newUserRole">
-                                    <option value="viewer">Viewer</option>
-                                    <option value="user">User</option>
-                                    <option value="admin">Admin</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2 mb-2 d-flex align-items-end">
-                                <button type="button" class="btn btn-success w-100" onclick="saveUser()">💾 Guardar</button>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="clearUserForm()" style="display: none;" id="cancelUserBtn">❌ Cancelar Edición</button>
-                    </div>
-                </div>
-
-                <!-- Tabla de Usuarios -->
-                <div class="table-responsive">
-                    <table class="table table-hover table-bordered">
-                        <thead class="table-dark">
-                            <tr>
-                                <th style="width: 30%">Usuario</th>
-                                <th style="width: 25%">Rol</th>
-                                <th style="width: 25%">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="usersTableBody">
-                            <tr>
-                                <td colspan="3" class="text-center">Cargando usuarios...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
             </div>
-        </div>
 
         <div class="text-center pb-3">
             <small class="text-muted">

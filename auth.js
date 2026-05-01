@@ -114,6 +114,11 @@ const Auth = {
         return 'index.html';
     },
 
+    isAdmin() {
+        const session = this.getSession();
+        return session && session.role === 'admin';
+    },
+
     hasRole(requiredRole) {
         const session = this.getSession();
         if (!session) return false;
@@ -131,6 +136,7 @@ const Auth = {
 
         const roleLabels = { admin: 'Administrador', user: 'Usuario', viewer: 'Observador' };
         const roleColors = { admin: '#dc2626', user: '#2563eb', viewer: '#6b7280' };
+        const adminBtn = session.role === 'admin' ? '<button class="auth-admin-btn" onclick="toggleUserPanel()">&#9881; Gestionar Usuarios</button>' : '';
 
         container.innerHTML = `
             <div class="auth-user-bar">
@@ -139,8 +145,67 @@ const Auth = {
                     <span class="auth-user-name">${session.username}</span>
                     <span class="auth-user-role" style="background: ${roleColors[session.role] || '#6b7280'};">${roleLabels[session.role] || session.role}</span>
                 </div>
-                <button class="auth-logout-btn" onclick="Auth.logoutAndRedirect()">Cerrar Sesion</button>
+                <div class="auth-user-actions">
+                    ${adminBtn}
+                    <button class="auth-logout-btn" onclick="Auth.logoutAndRedirect()">Cerrar Sesion</button>
+                </div>
             </div>
         `;
+    },
+
+    // ==================== USER MANAGEMENT ====================
+
+    async loadUsers() {
+        const db = this.getSupabaseClient();
+        const { data, error } = await db.from('users').select('id, username, role').order('username', { ascending: true });
+        if (error) throw error;
+        return data || [];
+    },
+
+    async saveUser(userId, username, password, role) {
+        const db = this.getSupabaseClient();
+
+        if (!username) throw new Error('Ingrese el nombre de usuario');
+        if (!password && !userId) throw new Error('Ingrese la contrasena');
+
+        if (userId) {
+            const updateData = { username: username, role: role };
+            if (password) {
+                const salt = this.generateSalt();
+                const hash = await this.hashPassword(password, salt);
+                updateData.password = password;
+                updateData.password_hash = hash;
+                updateData.salt = salt;
+            }
+            const { error } = await db.from('users').update(updateData).eq('id', userId);
+            if (error) throw error;
+        } else {
+            if (!password) throw new Error('Ingrese la contrasena');
+            const salt = this.generateSalt();
+            const hash = await this.hashPassword(password, salt);
+            const { error } = await db.from('users').insert([{
+                username: username,
+                password: password,
+                password_hash: hash,
+                salt: salt,
+                role: role
+            }]);
+            if (error) throw error;
+        }
+    },
+
+    async deleteUser(id) {
+        const db = this.getSupabaseClient();
+        const { error } = await db.from('users').delete().eq('id', id);
+        if (error) throw error;
+    },
+
+    getRoleBadge(role) {
+        const badges = {
+            'admin': '<span class="badge bg-danger">Admin</span>',
+            'user': '<span class="badge bg-primary">User</span>',
+            'viewer': '<span class="badge bg-secondary">Viewer</span>'
+        };
+        return badges[role] || '<span class="badge bg-light text-dark">' + role + '</span>';
     }
 };
