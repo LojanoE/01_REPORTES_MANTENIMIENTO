@@ -135,7 +135,7 @@ const Auth = {
         if (!container) return;
 
         const roleLabels = { admin: 'Administrador', user: 'Usuario', viewer: 'Observador' };
-        const roleColors = { admin: '#dc2626', user: '#2563eb', viewer: '#6b7280' };
+        const roleClasses = { admin: 'user-bar__role--admin', user: 'user-bar__role--user', viewer: 'user-bar__role--viewer' };
         const adminBtn = session.role === 'admin' ? '<button class="auth-admin-btn" onclick="toggleUserPanel()">&#9881; Gestionar Usuarios</button>' : '';
 
         container.innerHTML = `
@@ -143,7 +143,7 @@ const Auth = {
                 <div class="auth-user-info">
                     <span class="auth-user-icon">&#128100;</span>
                     <span class="auth-user-name">${session.username}</span>
-                    <span class="auth-user-role" style="background: ${roleColors[session.role] || '#6b7280'};">${roleLabels[session.role] || session.role}</span>
+                    <span class="auth-user-role ${roleClasses[session.role] || ''}">${roleLabels[session.role] || session.role}</span>
                 </div>
                 <div class="auth-user-actions">
                     ${adminBtn}

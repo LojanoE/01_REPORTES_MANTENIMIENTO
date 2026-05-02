@@ -6,18 +6,19 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <title>Portal de Aplicaciones - ECSA</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="landing.css?v=2.1.0">
+    <link rel="stylesheet" href="dashboard.css?v=1.0.0">
+    <link rel="stylesheet" href="landing.css?v=3.0.0">
 </head>
 <body>
     <!-- Login Overlay -->
-    <div id="loginOverlay">
+    <div id="loginOverlay" class="login-overlay">
         <div class="login-card">
-            <div class="login-icon">&#128272;</div>
-            <h3 class="login-title">Deposito de Relaves</h3>
-            <p class="login-subtitle">Sistema de Gestion de la Calidad</p>
-            <input type="text" id="loginUser" class="form-control login-input" placeholder="Usuario">
-            <input type="password" id="loginPass" class="form-control login-input" placeholder="Contrasena">
-            <button id="loginBtn" class="btn login-btn w-100" onclick="handleLogin()">Iniciar Sesion</button>
+            <div class="login-card__icon">&#128272;</div>
+            <h3 class="login-card__title">Deposito de Relaves</h3>
+            <p class="login-card__subtitle">Sistema de Gestion de la Calidad</p>
+            <input type="text" id="loginUser" class="login-input" placeholder="Usuario">
+            <input type="password" id="loginPass" class="login-input" placeholder="Contrasena">
+            <button id="loginBtn" class="login-btn" onclick="handleLogin()">Iniciar Sesion</button>
             <div id="loginError" class="login-error"></div>
         </div>
     </div>
@@ -200,7 +201,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="auth.js?v=2.1.0"></script>
+    <script src="auth.js?v=3.0.0"></script>
     <script>
         function handleLogin() {
             const username = document.getElementById('loginUser').value.trim();
