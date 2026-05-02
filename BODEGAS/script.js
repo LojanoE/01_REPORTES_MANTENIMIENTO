@@ -8,16 +8,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
     }
 
-    await loadBodegasList();
-    await loadInventory();
-    await loadTransactions();
+    // Cargar todo en paralelo
+    try {
+        await Promise.all([
+            loadBodegasList(),
+            loadInventory(),
+            loadTransactions()
+        ]);
+    } catch (err) {
+        console.error('Error cargando datos:', err);
+    }
+
     populateBodegas();
 
-    document.getElementById('inventorySearch').addEventListener('input', debounce(filterInventory, 300));
-    document.getElementById('bodegaFilter').addEventListener('change', filterInventory);
-    document.getElementById('typeFilter').addEventListener('change', filterTransactions);
-    document.getElementById('dateFilter').addEventListener('change', filterTransactions);
-    document.getElementById('transBodegaFilter').addEventListener('change', filterTransactions);
+    document.getElementById('inventorySearch')?.addEventListener('input', debounce(filterInventory, 300));
+    document.getElementById('bodegaFilter')?.addEventListener('change', filterInventory);
+    document.getElementById('typeFilter')?.addEventListener('change', filterTransactions);
+    document.getElementById('dateFilter')?.addEventListener('change', filterTransactions);
+    document.getElementById('transBodegaFilter')?.addEventListener('change', filterTransactions);
     document.getElementById('itemForm')?.addEventListener('submit', handleNewItem);
     document.getElementById('ingresoForm')?.addEventListener('submit', handleNewIngreso);
     document.getElementById('egresoForm')?.addEventListener('submit', handleNewEgreso);
@@ -42,7 +50,9 @@ let allTransactions = [];
 let filteredTransactions = [];
 let bodegasList = [];
 let transRendered = 0;
+let transLoadedAll = false;
 const TRANS_BATCH = 100;
+const TRANS_INITIAL_LIMIT = 200;
 
 function debounce(fn, ms) {
     let timer;
@@ -57,11 +67,7 @@ function debounce(fn, ms) {
 async function loadBodegasList() {
     try {
         const db = Auth.getSupabaseClient();
-        const { data, error } = await db
-            .from('bodegas_list')
-            .select('*')
-            .order('name', { ascending: true });
-
+        const { data, error } = await db.from('bodegas_list').select('id,name,code').order('name', { ascending: true });
         if (error) throw error;
         bodegasList = data || [];
     } catch (err) {
@@ -113,10 +119,12 @@ function renderBodegasList() {
     const fragment = document.createDocumentFragment();
     bodegasList.forEach(b => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td><strong>${b.name}</strong></td>
-            <td>${b.code || '-'}</td>
-        `;
+        const td1 = document.createElement('td');
+        td1.innerHTML = '<strong>' + b.name + '</strong>';
+        const td2 = document.createElement('td');
+        td2.textContent = b.code || '-';
+        tr.appendChild(td1);
+        tr.appendChild(td2);
         fragment.appendChild(tr);
     });
     tbody.innerHTML = '';
@@ -165,14 +173,14 @@ function filterItemsByBodega(selectId, bodegaSelectId) {
     const defaultOpt = document.createElement('option');
     defaultOpt.value = '';
     defaultOpt.textContent = items.length > 0
-        ? `Seleccione (${items.length} items)...`
+        ? 'Seleccione (' + items.length + ' items)...'
         : 'No hay items en esta bodega';
     fragment.appendChild(defaultOpt);
 
     items.forEach(item => {
         const opt = document.createElement('option');
         opt.value = item.id;
-        opt.textContent = `[${item.code}] ${item.description} (${item.current_stock || 0} ${item.unit || 'und'})`;
+        opt.textContent = '[' + item.code + '] ' + item.description + ' (' + (item.current_stock || 0) + ' ' + (item.unit || 'und') + ')';
         fragment.appendChild(opt);
     });
 
@@ -186,7 +194,7 @@ function onIngresoItemChange() {
     const info = document.getElementById('ingresoItemInfo');
 
     if (item) {
-        info.innerHTML = `<strong>${item.description}</strong>${item.specifications ? ' | ' + item.specifications.substring(0, 50) : ''} | Stock: <strong>${item.current_stock}</strong> ${item.unit || 'UND'} | Bodega: ${item.bodega || '-'}`;
+        info.textContent = item.description + (item.specifications ? ' | ' + item.specifications.substring(0, 50) : '') + ' | Stock: ' + item.current_stock + ' ' + (item.unit || 'UND') + ' | Bodega: ' + (item.bodega || '-');
         const bodegaSelect = document.getElementById('ingresoBodega');
         if (!bodegaSelect.value && item.bodega) {
             bodegaSelect.value = item.bodega;
@@ -205,13 +213,10 @@ function onEgresoItemChange() {
     if (item) {
         const stock = parseFloat(item.current_stock) || 0;
         const min = parseFloat(item.min_stock) || 0;
-        let badge = '';
-        if (stock <= 0) badge = '<span class="badge bg-danger">SIN STOCK</span>';
-        else if (stock <= min) badge = '<span class="badge bg-warning text-dark">STOCK BAJO</span>';
-        else badge = '<span class="badge bg-success">OK</span>';
+        const statusText = stock <= 0 ? 'SIN STOCK' : stock <= min ? 'STOCK BAJO' : 'OK';
 
-        infoEl.innerHTML = `${item.specifications ? item.specifications.substring(0, 40) + ' | ' : ''}Bodega: <strong>${item.bodega || '-'}</strong> | Ubicaci\u00f3n: ${item.location || '-'}`;
-        stockEl.innerHTML = `Stock: <strong>${stock}</strong> ${item.unit || 'UND'} ${badge}`;
+        infoEl.textContent = (item.specifications ? item.specifications.substring(0, 40) + ' | ' : '') + 'Bodega: ' + (item.bodega || '-') + ' | Ubicacion: ' + (item.location || '-');
+        stockEl.textContent = 'Stock: ' + stock + ' ' + (item.unit || 'UND') + ' ' + statusText;
 
         const bodegaSelect = document.getElementById('egresoBodega');
         if (!bodegaSelect.value && item.bodega) {
@@ -252,31 +257,23 @@ function renderInventory(items) {
     const fragment = document.createDocumentFragment();
 
     items.forEach(item => {
-        let statusBadge = '';
         const stock = parseFloat(item.current_stock) || 0;
         const min = parseFloat(item.min_stock) || 0;
-
-        if (stock <= 0) statusBadge = '<span class="badge bg-danger">Sin Stock</span>';
-        else if (stock <= min) statusBadge = '<span class="badge bg-warning text-dark">Stock Bajo</span>';
-        else statusBadge = '<span class="badge bg-success">Normal</span>';
-
-        const specShort = (item.specifications || '').length > 30
-            ? item.specifications.substring(0, 30) + '...'
-            : (item.specifications || '-');
+        const statusText = stock <= 0 ? 'Sin Stock' : stock <= min ? 'Stock Bajo' : 'Normal';
+        const statusClass = stock <= 0 ? 'bg-danger' : stock <= min ? 'bg-warning text-dark' : 'bg-success';
+        const specShort = (item.specifications || '').length > 30 ? item.specifications.substring(0, 30) + '...' : (item.specifications || '-');
 
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td><code>${item.code}</code></td>
-            <td><strong>${item.description}</strong></td>
-            <td class="hide-mobile"><small>${specShort}</small></td>
-            <td><span class="badge bg-info text-dark">${item.bodega || '-'}</span></td>
-            <td class="hide-mobile">${item.unit}</td>
-            <td class="text-center hide-mobile">${parseFloat(item.initial_stock) || 0}</td>
-            <td class="text-center"><strong>${stock}</strong></td>
-            <td class="text-center hide-mobile">${min}</td>
-            <td class="hide-mobile"><small>${item.location || '-'}</small></td>
-            <td class="text-center">${statusBadge}</td>
-        `;
+        tr.innerHTML = '<td><code>' + item.code + '</code></td>' +
+            '<td><strong>' + item.description + '</strong></td>' +
+            '<td class="hide-mobile"><small>' + specShort + '</small></td>' +
+            '<td><small>' + (item.bodega || '-') + '</small></td>' +
+            '<td class="hide-mobile">' + item.unit + '</td>' +
+            '<td class="text-center hide-mobile">' + (parseFloat(item.initial_stock) || 0) + '</td>' +
+            '<td class="text-center"><strong>' + stock + '</strong></td>' +
+            '<td class="text-center hide-mobile">' + min + '</td>' +
+            '<td class="hide-mobile"><small>' + (item.location || '-') + '</small></td>' +
+            '<td class="text-center"><span class="badge ' + statusClass + '">' + statusText + '</span></td>';
         fragment.appendChild(tr);
     });
 
@@ -306,15 +303,60 @@ async function loadTransactions() {
         const db = Auth.getSupabaseClient();
         const { data, error } = await db
             .from('bodegas_transactions')
-            .select('*, bodegas_inventory(code, description, bodega, unit)')
-            .order('created_at', { ascending: false });
+            .select('id,date,time,type,quantity,bodega,received_by,dispatched_by,voucher_code,location,notes,created_by_name,created_at,bodegas_inventory(code,description,bodega,unit)')
+            .order('created_at', { ascending: false })
+            .limit(TRANS_INITIAL_LIMIT);
 
         if (error) throw error;
-        allTransactions = data || [];
+        allTransactions = (data || []).map(preFormatTransaction);
+        transLoadedAll = (data || []).length < TRANS_INITIAL_LIMIT;
         transRendered = 0;
         filterTransactions();
     } catch (err) {
         console.error('Error al cargar movimientos:', err);
+    }
+}
+
+function preFormatTransaction(t) {
+    const timeStr = t.time ? t.time.substring(0, 5) : '';
+    const dateStr = t.date ? t.date.substring(0, 10) : '';
+    t._dateStr = dateStr.split('-').reverse().join('/');
+    t._timeStr = timeStr;
+    return t;
+}
+
+async function loadMoreTransactions() {
+    if (transLoadedAll) {
+        renderTransactionsBatch();
+        return;
+    }
+
+    const lastDate = allTransactions.length > 0 ? allTransactions[allTransactions.length - 1].created_at : null;
+    if (!lastDate) {
+        renderTransactionsBatch();
+        return;
+    }
+
+    try {
+        const db = Auth.getSupabaseClient();
+        const { data, error } = await db
+            .from('bodegas_transactions')
+            .select('id,date,time,type,quantity,bodega,received_by,dispatched_by,voucher_code,location,notes,created_by_name,created_at,bodegas_inventory(code,description,bodega,unit)')
+            .lt('created_at', lastDate)
+            .order('created_at', { ascending: false })
+            .limit(TRANS_BATCH);
+
+        if (error) throw error;
+
+        const newTrans = (data || []).map(preFormatTransaction);
+        allTransactions = allTransactions.concat(newTrans);
+        transLoadedAll = newTrans.length < TRANS_BATCH;
+
+        // Re-apply filters
+        filterTransactions();
+    } catch (err) {
+        console.error('Error cargando mas movimientos:', err);
+        renderTransactionsBatch();
     }
 }
 
@@ -342,30 +384,21 @@ function renderTransactionsBatch() {
     const fragment = document.createDocumentFragment();
 
     batch.forEach(t => {
-        const typeBadge = t.type === 'IN' ?
-            '<span class="text-success">&#8593; INGRESO</span>' :
-            '<span class="text-danger">&#8595; EGRESO</span>';
-
-        const timeStr = t.time ? ` ${t.time}` : '';
-        const dateStr = t.date ? new Date(t.date + 'T00:00:00').toLocaleDateString() : new Date(t.created_at).toLocaleDateString();
+        const typeBadge = t.type === 'IN' ? '\u2191 INGRESO' : '\u2193 EGRESO';
+        const typeClass = t.type === 'IN' ? 'text-success' : 'text-danger';
 
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${dateStr}</td>
-            <td class="hide-mobile">${timeStr || '-'}</td>
-            <td>
-                <div class="small text-secondary">${t.bodegas_inventory?.code || '-'}</div>
-                <div>${t.bodegas_inventory?.description || '-'}</div>
-            </td>
-            <td><small>${t.bodega || t.bodegas_inventory?.bodega || '-'}</small></td>
-            <td>${typeBadge}</td>
-            <td class="text-center"><strong>${t.quantity}</strong></td>
-            <td class="hide-mobile"><small>${t.received_by || '-'}</small></td>
-            <td class="hide-mobile"><small>${t.dispatched_by || '-'}</small></td>
-            <td class="hide-mobile"><small>${t.voucher_code || '-'}</small></td>
-            <td class="hide-mobile"><small>${t.location || '-'}</small></td>
-            <td class="hide-mobile"><small>${t.notes || '-'}</small></td>
-        `;
+        tr.innerHTML = '<td>' + t._dateStr + '</td>' +
+            '<td class="hide-mobile">' + (t._timeStr || '-') + '</td>' +
+            '<td><div class="small text-secondary">' + (t.bodegas_inventory?.code || '-') + '</div><div>' + (t.bodegas_inventory?.description || '-') + '</div></td>' +
+            '<td><small>' + (t.bodega || t.bodegas_inventory?.bodega || '-') + '</small></td>' +
+            '<td class="' + typeClass + '">' + typeBadge + '</td>' +
+            '<td class="text-center"><strong>' + t.quantity + '</strong></td>' +
+            '<td class="hide-mobile"><small>' + (t.received_by || '-') + '</small></td>' +
+            '<td class="hide-mobile"><small>' + (t.dispatched_by || '-') + '</small></td>' +
+            '<td class="hide-mobile"><small>' + (t.voucher_code || '-') + '</small></td>' +
+            '<td class="hide-mobile"><small>' + (t.location || '-') + '</small></td>' +
+            '<td class="hide-mobile"><small>' + (t.notes || '-') + '</small></td>';
         fragment.appendChild(tr);
     });
 
@@ -381,12 +414,8 @@ function renderTransactionsBatch() {
         loadMoreBtn.style.display = transRendered < filteredTransactions.length ? 'block' : 'none';
     }
     if (transCount) {
-        transCount.textContent = `Mostrando ${transRendered} de ${filteredTransactions.length} movimientos`;
+        transCount.textContent = 'Mostrando ' + transRendered + ' de ' + filteredTransactions.length + ' movimientos';
     }
-}
-
-function loadMoreTransactions() {
-    renderTransactionsBatch();
 }
 
 // ==================== GESTION ====================
@@ -461,8 +490,7 @@ async function handleNewIngreso(e) {
         alert('Ingreso registrado correctamente en ' + bodega);
         e.target.reset();
         document.getElementById('ingresoItemInfo').textContent = '';
-        await loadInventory();
-        await loadTransactions();
+        await Promise.all([loadInventory(), loadTransactions()]);
         filterItemsByBodega('ingresoItem', 'ingresoBodega');
     } catch (err) {
         alert('Error: ' + err.message);
@@ -483,7 +511,7 @@ async function handleNewEgreso(e) {
     if (item) {
         const stock = parseFloat(item.current_stock) || 0;
         if (stock < qty) {
-            if (!confirm(`Stock insuficiente en ${item.bodega || 'bodega'} (${stock} ${item.unit || 'UND'}). Desea continuar de todos modos?`)) return;
+            if (!confirm('Stock insuficiente en ' + (item.bodega || 'bodega') + ' (' + stock + ' ' + (item.unit || 'UND') + '). Desea continuar de todos modos?')) return;
         }
     }
 
@@ -508,8 +536,7 @@ async function handleNewEgreso(e) {
         e.target.reset();
         document.getElementById('egresoItemInfo').textContent = '';
         document.getElementById('egresoStockInfo').textContent = '';
-        await loadInventory();
-        await loadTransactions();
+        await Promise.all([loadInventory(), loadTransactions()]);
         filterItemsByBodega('egresoItem', 'egresoBodega');
     } catch (err) {
         alert('Error: ' + err.message);
@@ -522,8 +549,8 @@ function exportToExcel() {
     if (filteredTransactions.length === 0) return alert('No hay datos para exportar');
 
     const dataToExport = filteredTransactions.map(t => ({
-        Fecha: t.date || '',
-        Hora: t.time || '',
+        Fecha: t._dateStr || '',
+        Hora: t._timeStr || '',
         Codigo: t.bodegas_inventory?.code || '',
         Descripcion: t.bodegas_inventory?.description || '',
         Bodega: t.bodega || '',
@@ -539,7 +566,7 @@ function exportToExcel() {
     const ws = XLSX.utils.json_to_sheet(dataToExport);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Movimientos");
-    XLSX.writeFile(wb, `Reporte_Bodegas_${new Date().toISOString().split('T')[0]}.xlsx`);
+    XLSX.writeFile(wb, 'Reporte_Bodegas_' + new Date().toISOString().split('T')[0] + '.xlsx');
 }
 
 function exportInventory() {
@@ -561,5 +588,5 @@ function exportInventory() {
     const ws = XLSX.utils.json_to_sheet(dataToExport);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Inventario");
-    XLSX.writeFile(wb, `Inventario_Bodegas_${new Date().toISOString().split('T')[0]}.xlsx`);
+    XLSX.writeFile(wb, 'Inventario_Bodegas_' + new Date().toISOString().split('T')[0] + '.xlsx');
 }
