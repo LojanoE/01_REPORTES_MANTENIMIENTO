@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('dateFrom')?.addEventListener('change', filterTransactions);
     document.getElementById('dateTo')?.addEventListener('change', filterTransactions);
     document.getElementById('transBodegaFilter')?.addEventListener('change', filterTransactions);
+    document.getElementById('clearFiltersBtn')?.addEventListener('click', clearTransFilters);
     document.getElementById('itemForm')?.addEventListener('submit', handleNewItem);
     document.getElementById('ingresoForm')?.addEventListener('submit', handleNewIngreso);
     document.getElementById('egresoForm')?.addEventListener('submit', handleNewEgreso);
@@ -458,7 +459,7 @@ async function loadFilteredTransactions(type, dateFrom, dateTo, bodega) {
     }
 }
 
-function filterTransactions() {
+async function filterTransactions() {
     const type = document.getElementById('typeFilter').value;
     const dateFrom = document.getElementById('dateFrom').value;
     const dateTo = document.getElementById('dateTo').value;
@@ -467,7 +468,11 @@ function filterTransactions() {
     const hasFilters = type || dateFrom || dateTo || bodega;
 
     if (hasFilters) {
-        loadFilteredTransactions(type, dateFrom, dateTo, bodega);
+        const tbody = document.getElementById('transactionsTableBody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="11" class="text-center">Filtrando movimientos...</td></tr>';
+        }
+        await loadFilteredTransactions(type, dateFrom, dateTo, bodega);
     } else {
         transFiltersActive = false;
         filteredTransactions = allTransactions;
@@ -476,10 +481,30 @@ function filterTransactions() {
     }
 }
 
+function clearTransFilters() {
+    document.getElementById('typeFilter').value = '';
+    document.getElementById('dateFrom').value = '';
+    document.getElementById('dateTo').value = '';
+    document.getElementById('transBodegaFilter').value = '';
+    transFiltersActive = false;
+    filteredTransactions = allTransactions;
+    transRendered = 0;
+    renderTransactionsBatch();
+}
+
 function renderTransactionsBatch() {
     const tbody = document.getElementById('transactionsTableBody');
     const end = Math.min(transRendered + TRANS_BATCH, filteredTransactions.length);
     const batch = filteredTransactions.slice(transRendered, end);
+
+    if (filteredTransactions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" class="text-center">No se encontraron movimientos</td></tr>';
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        const transCount = document.getElementById('transCount');
+        if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+        if (transCount) transCount.textContent = '0 movimientos';
+        return;
+    }
 
     const fragment = document.createDocumentFragment();
 
