@@ -159,6 +159,91 @@ h4 { font-size: 1.1rem; }
 
 .user-bar__actions { display: flex; align-items: center; gap: var(--space-sm); }
 
+.auth-user-bar {
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-default);
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space-lg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.auth-user-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.auth-user-icon { font-size: 1.1rem; }
+.auth-user-name { font-weight: 600; font-size: 0.9rem; }
+
+.auth-user-role {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-sm);
+}
+
+.auth-user-role--admin {
+    background: rgba(255, 61, 113, 0.15);
+    color: var(--accent-red);
+    border: 1px solid rgba(255, 61, 113, 0.3);
+}
+
+.auth-user-role--user {
+    background: rgba(0, 212, 255, 0.15);
+    color: var(--accent-cyan);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.auth-user-role--viewer {
+    background: rgba(139, 156, 199, 0.15);
+    color: var(--text-secondary);
+    border: 1px solid rgba(139, 156, 199, 0.3);
+}
+
+.auth-user-actions { display: flex; align-items: center; gap: var(--space-sm); }
+
+.auth-back-btn,
+.auth-logout-btn,
+.auth-admin-btn {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    background: transparent;
+    color: var(--text-secondary);
+}
+
+.auth-back-btn:hover {
+    background: var(--accent-cyan);
+    color: var(--bg-deep);
+    border-color: var(--accent-cyan);
+}
+
+.auth-logout-btn:hover {
+    background: var(--accent-red);
+    color: var(--bg-deep);
+    border-color: var(--accent-red);
+}
+
+.auth-admin-btn:hover {
+    background: var(--accent-amber);
+    color: var(--bg-deep);
+    border-color: var(--accent-amber);
+}
+
 /* === BOTONES === */
 .btn {
     display: inline-flex;

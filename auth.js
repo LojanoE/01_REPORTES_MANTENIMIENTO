@@ -138,6 +138,13 @@ const Auth = {
         const roleClasses = { admin: 'user-bar__role--admin', user: 'user-bar__role--user', viewer: 'user-bar__role--viewer' };
         const adminBtn = session.role === 'admin' ? '<button class="auth-admin-btn" onclick="toggleUserPanel()">&#9881; Gestionar Usuarios</button>' : '';
 
+        const isSubApp = window.location.pathname.includes('/MANTENIMIENTO/') ||
+                         window.location.pathname.includes('/POZOS/') ||
+                         window.location.pathname.includes('/BODEGAS/');
+        const backBtn = isSubApp
+            ? '<button class="auth-back-btn" onclick="window.location.href=Auth.getPortalPath()">&#8592; Portal</button>'
+            : '';
+
         container.innerHTML = `
             <div class="auth-user-bar">
                 <div class="auth-user-info">
@@ -146,6 +153,7 @@ const Auth = {
                     <span class="auth-user-role ${roleClasses[session.role] || ''}">${roleLabels[session.role] || session.role}</span>
                 </div>
                 <div class="auth-user-actions">
+                    ${backBtn}
                     ${adminBtn}
                     <button class="auth-logout-btn" onclick="Auth.logoutAndRedirect()">Cerrar Sesion</button>
                 </div>

@@ -217,6 +217,25 @@ html, body {
     color: white;
 }
 
+.auth-back-btn {
+    background: transparent;
+    border: 1px solid var(--accent-cyan);
+    color: var(--accent-cyan);
+    border-radius: 6px;
+    padding: 0.4rem 1rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.auth-back-btn:hover {
+    background: var(--accent-cyan);
+    color: var(--bg-deep);
+}
+
 /* === HEADER === */
 header {
     padding: 2rem 1rem 1rem;
