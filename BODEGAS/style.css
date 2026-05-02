@@ -151,6 +151,18 @@ body {
     color: #fbbf24 !important;
 }
 
+/* Paginacion */
+#inventoryPaginationInfo {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+#inventoryPrevBtn:disabled,
+#inventoryNextBtn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 /* ==================== RESPONSIVE MOVIL ==================== */
 @media (max-width: 768px) {
     .hide-mobile {

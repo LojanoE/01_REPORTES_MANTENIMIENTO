@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control de Bodegas - GDR</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=2.0.0">
+    <link rel="stylesheet" href="style.css?v=2.1.0">
 </head>
 <body>
     <div id="userBar"></div>
@@ -72,6 +72,13 @@
                                     <tr><td colspan="10" class="text-center">Cargando inventario...</td></tr>
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+                            <small id="inventoryPaginationInfo" class="text-secondary"></small>
+                            <div>
+                                <button id="inventoryPrevBtn" class="btn btn-outline-light btn-sm" onclick="goToInventoryPage(inventoryPage - 1)" disabled>Anterior</button>
+                                <button id="inventoryNextBtn" class="btn btn-outline-light btn-sm" onclick="goToInventoryPage(inventoryPage + 1)" disabled>Siguiente</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -345,6 +352,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script src="../auth.js?v=2.1.0"></script>
-    <script src="script.js?v=3.0.0"></script>
+    <script src="script.js?v=4.0.0"></script>
 </body>
 </html>

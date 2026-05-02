@@ -32,12 +32,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('bodegaForm')?.addEventListener('submit', handleNewBodega);
     document.getElementById('loadMoreBtn')?.addEventListener('click', loadMoreTransactions);
 
-    document.getElementById('ingresoBodega')?.addEventListener('change', () => {
-        filterItemsByBodega('ingresoItem', 'ingresoBodega');
+    document.getElementById('ingresoBodega')?.addEventListener('change', async () => {
+        await filterItemsByBodega('ingresoItem', 'ingresoBodega');
         document.getElementById('ingresoItemInfo').textContent = '';
     });
-    document.getElementById('egresoBodega')?.addEventListener('change', () => {
-        filterItemsByBodega('egresoItem', 'egresoBodega');
+    document.getElementById('egresoBodega')?.addEventListener('change', async () => {
+        await filterItemsByBodega('egresoItem', 'egresoBodega');
         document.getElementById('egresoItemInfo').textContent = '';
         document.getElementById('egresoStockInfo').textContent = '';
     });
@@ -45,7 +45,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('egresoItem')?.addEventListener('change', onEgresoItemChange);
 });
 
-let inventoryData = [];
 let allTransactions = [];
 let filteredTransactions = [];
 let bodegasList = [];
@@ -53,6 +52,16 @@ let transRendered = 0;
 let transLoadedAll = false;
 const TRANS_BATCH = 100;
 const TRANS_INITIAL_LIMIT = 200;
+
+// Inventory pagination
+let inventoryPage = 1;
+const INVENTORY_PAGE_SIZE = 50;
+let inventoryTotalCount = 0;
+let inventorySearchTerm = '';
+let inventoryBodegaFilter = '';
+
+// Form items cache { bodegaName: [items] }
+let formItemsCache = {};
 
 function debounce(fn, ms) {
     let timer;
@@ -77,9 +86,7 @@ async function loadBodegasList() {
 }
 
 function getBodegasNames() {
-    const fromList = bodegasList.map(b => b.name);
-    const fromInventory = inventoryData.map(i => i.bodega).filter(Boolean);
-    return [...new Set([...fromList, ...fromInventory])].sort();
+    return bodegasList.map(b => b.name).sort();
 }
 
 function populateBodegas() {
@@ -159,14 +166,29 @@ async function handleNewBodega(e) {
 
 // ==================== ITEMS ====================
 
-function filterItemsByBodega(selectId, bodegaSelectId) {
+async function filterItemsByBodega(selectId, bodegaSelectId) {
     const bodega = document.getElementById(bodegaSelectId).value;
     const select = document.getElementById(selectId);
     if (!select) return;
 
-    const items = bodega
-        ? inventoryData.filter(i => i.bodega === bodega)
-        : inventoryData;
+    let items = [];
+    if (bodega) {
+        if (formItemsCache[bodega]) {
+            items = formItemsCache[bodega];
+        } else {
+            try {
+                const db = Auth.getSupabaseClient();
+                const { data } = await db.from('bodegas_inventory')
+                    .select('id,code,description,current_stock,unit,bodega')
+                    .eq('bodega', bodega)
+                    .order('description', { ascending: true });
+                items = data || [];
+                formItemsCache[bodega] = items;
+            } catch (err) {
+                console.error('Error al cargar items por bodega:', err);
+            }
+        }
+    }
 
     const fragment = document.createDocumentFragment();
 
@@ -190,7 +212,9 @@ function filterItemsByBodega(selectId, bodegaSelectId) {
 
 function onIngresoItemChange() {
     const itemId = document.getElementById('ingresoItem').value;
-    const item = inventoryData.find(i => i.id == itemId);
+    const bodega = document.getElementById('ingresoBodega').value;
+    const items = formItemsCache[bodega] || [];
+    const item = items.find(i => i.id == itemId);
     const info = document.getElementById('ingresoItemInfo');
 
     if (item) {
@@ -206,7 +230,9 @@ function onIngresoItemChange() {
 
 function onEgresoItemChange() {
     const itemId = document.getElementById('egresoItem').value;
-    const item = inventoryData.find(i => i.id == itemId);
+    const bodega = document.getElementById('egresoBodega').value;
+    const items = formItemsCache[bodega] || [];
+    const item = items.find(i => i.id == itemId);
     const infoEl = document.getElementById('egresoItemInfo');
     const stockEl = document.getElementById('egresoStockInfo');
 
@@ -230,19 +256,41 @@ function onEgresoItemChange() {
 
 // ==================== INVENTARIO ====================
 
-async function loadInventory() {
+async function loadInventory(page = 1, search = '', bodega = '') {
     try {
         const db = Auth.getSupabaseClient();
-        const { data, error } = await db
-            .from('bodegas_inventory')
-            .select('*')
-            .order('description', { ascending: true });
+        const fromRow = (page - 1) * INVENTORY_PAGE_SIZE;
+        const toRow = fromRow + INVENTORY_PAGE_SIZE - 1;
 
+        let query = db
+            .from('bodegas_inventory')
+            .select('*', { count: 'exact', head: false })
+            .order('description', { ascending: true })
+            .range(fromRow, toRow);
+
+        if (search) {
+            const safe = search.replace(/[%_]/g, '\\$&');
+            query = query.or(`code.ilike.%${safe}%,description.ilike.%${safe}%,specifications.ilike.%${safe}%`);
+        }
+        if (bodega) {
+            query = query.eq('bodega', bodega);
+        }
+
+        const { data, error, count } = await query;
         if (error) throw error;
-        inventoryData = data || [];
-        renderInventory(inventoryData);
+
+        inventoryPage = page;
+        inventoryTotalCount = count || 0;
+        inventorySearchTerm = search;
+        inventoryBodegaFilter = bodega;
+        renderInventory(data || []);
+        updateInventoryPagination();
     } catch (err) {
         console.error('Error al cargar inventario:', err);
+        const tbody = document.getElementById('inventoryTableBody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-danger">Error al cargar inventario</td></tr>';
+        }
     }
 }
 
@@ -281,19 +329,31 @@ function renderInventory(items) {
     tbody.appendChild(fragment);
 }
 
+function updateInventoryPagination() {
+    const info = document.getElementById('inventoryPaginationInfo');
+    const prevBtn = document.getElementById('inventoryPrevBtn');
+    const nextBtn = document.getElementById('inventoryNextBtn');
+
+    if (!info) return;
+    const totalPages = Math.ceil(inventoryTotalCount / INVENTORY_PAGE_SIZE) || 1;
+    const from = (inventoryPage - 1) * INVENTORY_PAGE_SIZE + 1;
+    const to = Math.min(inventoryPage * INVENTORY_PAGE_SIZE, inventoryTotalCount);
+
+    info.textContent = 'Mostrando ' + from + '-' + to + ' de ' + inventoryTotalCount + ' articulos (Pagina ' + inventoryPage + ' de ' + totalPages + ')';
+    if (prevBtn) prevBtn.disabled = inventoryPage <= 1;
+    if (nextBtn) nextBtn.disabled = inventoryPage >= totalPages;
+}
+
+function goToInventoryPage(page) {
+    if (page < 1) return;
+    loadInventory(page, inventorySearchTerm, inventoryBodegaFilter);
+}
+
 function filterInventory() {
-    const search = document.getElementById('inventorySearch').value.toLowerCase();
+    const search = document.getElementById('inventorySearch').value.trim().toLowerCase();
     const bodega = document.getElementById('bodegaFilter').value;
-
-    const filtered = inventoryData.filter(item => {
-        const matchesSearch = item.code.toLowerCase().includes(search) ||
-                              item.description.toLowerCase().includes(search) ||
-                              (item.specifications || '').toLowerCase().includes(search);
-        const matchesBodega = bodega === "" || item.bodega === bodega;
-        return matchesSearch && matchesBodega;
-    });
-
-    renderInventory(filtered);
+    formItemsCache = {};
+    loadInventory(1, search, bodega);
 }
 
 // ==================== MOVIMIENTOS ====================
@@ -449,10 +509,11 @@ async function handleNewItem(e) {
 
         alert('Articulo registrado con exito en ' + bodega);
         e.target.reset();
-        await loadInventory();
+        formItemsCache = {};
+        await loadInventory(1, inventorySearchTerm, inventoryBodegaFilter);
         populateBodegas();
-        filterItemsByBodega('ingresoItem', 'ingresoBodega');
-        filterItemsByBodega('egresoItem', 'egresoBodega');
+        await filterItemsByBodega('ingresoItem', 'ingresoBodega');
+        await filterItemsByBodega('egresoItem', 'egresoBodega');
     } catch (err) {
         alert('Error: ' + err.message);
     }
@@ -490,8 +551,9 @@ async function handleNewIngreso(e) {
         alert('Ingreso registrado correctamente en ' + bodega);
         e.target.reset();
         document.getElementById('ingresoItemInfo').textContent = '';
-        await Promise.all([loadInventory(), loadTransactions()]);
-        filterItemsByBodega('ingresoItem', 'ingresoBodega');
+        formItemsCache = {};
+        await Promise.all([loadInventory(1, inventorySearchTerm, inventoryBodegaFilter), loadTransactions()]);
+        await filterItemsByBodega('ingresoItem', 'ingresoBodega');
     } catch (err) {
         alert('Error: ' + err.message);
     }
@@ -507,7 +569,8 @@ async function handleNewEgreso(e) {
     if (!itemId || !qty) return alert('Complete los campos requeridos');
     if (!bodega) return alert('Seleccione la bodega');
 
-    const item = inventoryData.find(i => i.id == itemId);
+    const bodegaItems = formItemsCache[bodega] || [];
+    const item = bodegaItems.find(i => i.id == itemId);
     if (item) {
         const stock = parseFloat(item.current_stock) || 0;
         if (stock < qty) {
@@ -536,8 +599,9 @@ async function handleNewEgreso(e) {
         e.target.reset();
         document.getElementById('egresoItemInfo').textContent = '';
         document.getElementById('egresoStockInfo').textContent = '';
-        await Promise.all([loadInventory(), loadTransactions()]);
-        filterItemsByBodega('egresoItem', 'egresoBodega');
+        formItemsCache = {};
+        await Promise.all([loadInventory(1, inventorySearchTerm, inventoryBodegaFilter), loadTransactions()]);
+        await filterItemsByBodega('egresoItem', 'egresoBodega');
     } catch (err) {
         alert('Error: ' + err.message);
     }
@@ -569,24 +633,36 @@ function exportToExcel() {
     XLSX.writeFile(wb, 'Reporte_Bodegas_' + new Date().toISOString().split('T')[0] + '.xlsx');
 }
 
-function exportInventory() {
-    if (inventoryData.length === 0) return alert('No hay datos para exportar');
+async function exportInventory() {
+    try {
+        const db = Auth.getSupabaseClient();
+        const { data, error } = await db
+            .from('bodegas_inventory')
+            .select('code,excel_unique_id,description,specifications,bodega,unit,initial_stock,current_stock,min_stock,location')
+            .order('description', { ascending: true });
 
-    const dataToExport = inventoryData.map(item => ({
-        Codigo: item.code,
-        COD_UNICO: item.excel_unique_id || '',
-        Descripcion: item.description,
-        Especificaciones: item.specifications || '',
-        Bodega: item.bodega || '',
-        Unidad: item.unit,
-        Stock_Inicial: item.initial_stock || 0,
-        Stock_Actual: item.current_stock || 0,
-        Stock_Min: item.min_stock || 0,
-        Ubicacion: item.location || ''
-    }));
+        if (error) throw error;
+        const allData = data || [];
+        if (allData.length === 0) return alert('No hay datos para exportar');
 
-    const ws = XLSX.utils.json_to_sheet(dataToExport);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Inventario");
-    XLSX.writeFile(wb, 'Inventario_Bodegas_' + new Date().toISOString().split('T')[0] + '.xlsx');
+        const dataToExport = allData.map(item => ({
+            Codigo: item.code,
+            COD_UNICO: item.excel_unique_id || '',
+            Descripcion: item.description,
+            Especificaciones: item.specifications || '',
+            Bodega: item.bodega || '',
+            Unidad: item.unit,
+            Stock_Inicial: item.initial_stock || 0,
+            Stock_Actual: item.current_stock || 0,
+            Stock_Min: item.min_stock || 0,
+            Ubicacion: item.location || ''
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(dataToExport);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Inventario");
+        XLSX.writeFile(wb, 'Inventario_Bodegas_' + new Date().toISOString().split('T')[0] + '.xlsx');
+    } catch (err) {
+        alert('Error al exportar: ' + err.message);
+    }
 }
