@@ -88,23 +88,30 @@
             <div class="tab-pane fade" id="transactions" role="tabpanel">
                 <div class="card bg-dark text-light border-secondary">
                     <div class="card-body">
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-3">
-                                <input type="date" id="dateFilter" class="form-control bg-dark text-light border-secondary">
+                        <div class="row g-2 mb-3 align-items-end">
+                            <div class="col-6 col-md-2">
+                                <small class="text-secondary d-block mb-1">Desde</small>
+                                <input type="date" id="dateFrom" class="form-control bg-dark text-light border-secondary">
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-6 col-md-2">
+                                <small class="text-secondary d-block mb-1">Hasta</small>
+                                <input type="date" id="dateTo" class="form-control bg-dark text-light border-secondary">
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <small class="text-secondary d-block mb-1">Tipo</small>
                                 <select id="typeFilter" class="form-select bg-dark text-light border-secondary">
                                     <option value="">Todos los movimientos</option>
                                     <option value="IN">Ingresos</option>
                                     <option value="OUT">Egresos</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-6 col-md-3">
+                                <small class="text-secondary d-block mb-1">Bodega</small>
                                 <select id="transBodegaFilter" class="form-select bg-dark text-light border-secondary">
                                     <option value="">Todas las bodegas</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-12 col-md-2">
                                 <button class="btn btn-outline-success w-100" onclick="exportToExcel()">Exportar a Excel</button>
                             </div>
                         </div>
@@ -352,6 +359,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script src="../auth.js?v=2.1.0"></script>
-    <script src="script.js?v=4.0.0"></script>
+    <script src="script.js?v=4.0.1"></script>
 </body>
 </html>

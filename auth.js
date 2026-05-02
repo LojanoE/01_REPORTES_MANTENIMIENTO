@@ -108,7 +108,7 @@ const Auth = {
 
     getPortalPath() {
         const path = window.location.pathname;
-        if (path.includes('/MANTENIMIENTO/') || path.includes('/POZOS/')) {
+        if (path.includes('/MANTENIMIENTO/') || path.includes('/POZOS/') || path.includes('/BODEGAS/')) {
             return '../index.html';
         }
         return 'index.html';

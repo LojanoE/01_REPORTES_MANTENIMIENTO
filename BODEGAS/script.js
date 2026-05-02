@@ -24,7 +24,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('inventorySearch')?.addEventListener('input', debounce(filterInventory, 300));
     document.getElementById('bodegaFilter')?.addEventListener('change', filterInventory);
     document.getElementById('typeFilter')?.addEventListener('change', filterTransactions);
-    document.getElementById('dateFilter')?.addEventListener('change', filterTransactions);
+    document.getElementById('dateFrom')?.addEventListener('change', filterTransactions);
+    document.getElementById('dateTo')?.addEventListener('change', filterTransactions);
     document.getElementById('transBodegaFilter')?.addEventListener('change', filterTransactions);
     document.getElementById('itemForm')?.addEventListener('submit', handleNewItem);
     document.getElementById('ingresoForm')?.addEventListener('submit', handleNewIngreso);
@@ -50,8 +51,10 @@ let filteredTransactions = [];
 let bodegasList = [];
 let transRendered = 0;
 let transLoadedAll = false;
+let transFiltersActive = false;
 const TRANS_BATCH = 100;
 const TRANS_INITIAL_LIMIT = 200;
+const TRANS_FILTER_LIMIT = 500;
 
 // Inventory pagination
 let inventoryPage = 1;
@@ -370,8 +373,10 @@ async function loadTransactions() {
         if (error) throw error;
         allTransactions = (data || []).map(preFormatTransaction);
         transLoadedAll = (data || []).length < TRANS_INITIAL_LIMIT;
+        transFiltersActive = false;
         transRendered = 0;
-        filterTransactions();
+        filteredTransactions = allTransactions;
+        renderTransactionsBatch();
     } catch (err) {
         console.error('Error al cargar movimientos:', err);
     }
@@ -386,7 +391,7 @@ function preFormatTransaction(t) {
 }
 
 async function loadMoreTransactions() {
-    if (transLoadedAll) {
+    if (transFiltersActive || transLoadedAll) {
         renderTransactionsBatch();
         return;
     }
@@ -412,28 +417,63 @@ async function loadMoreTransactions() {
         allTransactions = allTransactions.concat(newTrans);
         transLoadedAll = newTrans.length < TRANS_BATCH;
 
-        // Re-apply filters
-        filterTransactions();
+        filteredTransactions = allTransactions;
+        transRendered = 0;
+        renderTransactionsBatch();
     } catch (err) {
         console.error('Error cargando mas movimientos:', err);
         renderTransactionsBatch();
     }
 }
 
+async function loadFilteredTransactions(type, dateFrom, dateTo, bodega) {
+    try {
+        const db = Auth.getSupabaseClient();
+        let query = db
+            .from('bodegas_transactions')
+            .select('id,date,time,type,quantity,bodega,received_by,dispatched_by,voucher_code,location,notes,created_by_name,created_at,bodegas_inventory(code,description,bodega,unit)')
+            .order('created_at', { ascending: false })
+            .limit(TRANS_FILTER_LIMIT);
+
+        if (type) query = query.eq('type', type);
+        if (dateFrom) query = query.gte('date', dateFrom);
+        if (dateTo) query = query.lte('date', dateTo);
+        if (bodega) query = query.eq('bodega', bodega);
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        allTransactions = (data || []).map(preFormatTransaction);
+        transLoadedAll = true;
+        transFiltersActive = true;
+        filteredTransactions = allTransactions;
+        transRendered = 0;
+        renderTransactionsBatch();
+    } catch (err) {
+        console.error('Error al filtrar movimientos:', err);
+        const tbody = document.getElementById('transactionsTableBody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Error al filtrar movimientos</td></tr>';
+        }
+    }
+}
+
 function filterTransactions() {
     const type = document.getElementById('typeFilter').value;
-    const date = document.getElementById('dateFilter').value;
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo = document.getElementById('dateTo').value;
     const bodega = document.getElementById('transBodegaFilter').value;
 
-    filteredTransactions = allTransactions.filter(t => {
-        const matchesType = type === "" || t.type === type;
-        const matchesDate = date === "" || (t.date && t.date.startsWith(date));
-        const matchesBodega = bodega === "" || t.bodega === bodega || t.bodegas_inventory?.bodega === bodega;
-        return matchesType && matchesDate && matchesBodega;
-    });
+    const hasFilters = type || dateFrom || dateTo || bodega;
 
-    transRendered = 0;
-    renderTransactionsBatch();
+    if (hasFilters) {
+        loadFilteredTransactions(type, dateFrom, dateTo, bodega);
+    } else {
+        transFiltersActive = false;
+        filteredTransactions = allTransactions;
+        transRendered = 0;
+        renderTransactionsBatch();
+    }
 }
 
 function renderTransactionsBatch() {
@@ -471,7 +511,7 @@ function renderTransactionsBatch() {
     const loadMoreBtn = document.getElementById('loadMoreBtn');
     const transCount = document.getElementById('transCount');
     if (loadMoreBtn) {
-        loadMoreBtn.style.display = transRendered < filteredTransactions.length ? 'block' : 'none';
+        loadMoreBtn.style.display = transFiltersActive || transRendered >= filteredTransactions.length ? 'none' : 'block';
     }
     if (transCount) {
         transCount.textContent = 'Mostrando ' + transRendered + ' de ' + filteredTransactions.length + ' movimientos';
