@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
     }
 
+    await loadBodegasList();
     await loadInventory();
     await loadTransactions();
     populateBodegas();
@@ -20,6 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('itemForm')?.addEventListener('submit', handleNewItem);
     document.getElementById('ingresoForm')?.addEventListener('submit', handleNewIngreso);
     document.getElementById('egresoForm')?.addEventListener('submit', handleNewEgreso);
+    document.getElementById('bodegaForm')?.addEventListener('submit', handleNewBodega);
     document.getElementById('loadMoreBtn')?.addEventListener('click', loadMoreTransactions);
 
     document.getElementById('ingresoBodega')?.addEventListener('change', () => {
@@ -38,27 +40,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 let inventoryData = [];
 let allTransactions = [];
 let filteredTransactions = [];
+let bodegasList = [];
 let transRendered = 0;
 const TRANS_BATCH = 100;
-
-const BODEGAS = [
-    'Bodega GDR 1 (MV)',
-    'Bodega GDR 1 (M&OPTAC #2)',
-    'Bodega GDR 1 (OMV)',
-    'Bodega GDR 2 (LSM & QC)',
-    'Bodega GDR 2 (C/QC&LSM)',
-    'Bodega GDR 2 (OMV)',
-    'Bodega GDR 3 (M)',
-    'Bodega GDR 3 (PTAC #2)',
-    'Bodega GDR 3 (MV)',
-    'Bodega GDR 4 (Container PTAC #2)',
-    'Bodega GDR 5 (M&OPTAC #2)',
-    'Bodega GDR 5 (MV)',
-    'Sala de Induccion de GDR 6',
-    'Unidad de Monitoreo',
-    'Unidad de Operacion, Mantenimiento y Vigilancia',
-    'Unidad de Construccion, Control de Calidad & Laboratorio'
-];
 
 function debounce(fn, ms) {
     let timer;
@@ -68,26 +52,104 @@ function debounce(fn, ms) {
     };
 }
 
+// ==================== BODEGAS ====================
+
+async function loadBodegasList() {
+    try {
+        const db = Auth.getSupabaseClient();
+        const { data, error } = await db
+            .from('bodegas_list')
+            .select('*')
+            .order('name', { ascending: true });
+
+        if (error) throw error;
+        bodegasList = data || [];
+    } catch (err) {
+        console.error('Error al cargar bodegas:', err);
+        bodegasList = [];
+    }
+}
+
+function getBodegasNames() {
+    const fromList = bodegasList.map(b => b.name);
+    const fromInventory = inventoryData.map(i => i.bodega).filter(Boolean);
+    return [...new Set([...fromList, ...fromInventory])].sort();
+}
+
 function populateBodegas() {
+    const names = getBodegasNames();
     const selects = ['bodegaFilter', 'transBodegaFilter', 'itemBodega', 'ingresoBodega', 'egresoBodega'];
-    const combinedBodegas = [...new Set([...BODEGAS, ...inventoryData.map(i => i.bodega).filter(Boolean)])].sort();
 
     selects.forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
+        const current = el.value;
         el.innerHTML = '';
         const opt = document.createElement('option');
         opt.value = '';
         opt.textContent = (id === 'bodegaFilter' || id === 'transBodegaFilter') ? 'Todas las bodegas' : 'Seleccionar...';
         el.appendChild(opt);
-        combinedBodegas.forEach(b => {
+        names.forEach(b => {
             const o = document.createElement('option');
             o.value = b;
             o.textContent = b;
             el.appendChild(o);
         });
+        el.value = current;
     });
+
+    renderBodegasList();
 }
+
+function renderBodegasList() {
+    const tbody = document.getElementById('bodegasTableBody');
+    if (!tbody) return;
+
+    if (bodegasList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="2" class="text-center">No hay bodegas registradas</td></tr>';
+        return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    bodegasList.forEach(b => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${b.name}</strong></td>
+            <td>${b.code || '-'}</td>
+        `;
+        fragment.appendChild(tr);
+    });
+    tbody.innerHTML = '';
+    tbody.appendChild(fragment);
+}
+
+async function handleNewBodega(e) {
+    e.preventDefault();
+    if (!Auth.isAdmin()) return alert('Solo administradores pueden realizar esta accion');
+
+    const name = document.getElementById('bodegaName').value.trim();
+    const code = document.getElementById('bodegaCode').value.trim();
+
+    if (!name) return alert('El nombre de la bodega es obligatorio');
+
+    try {
+        const db = Auth.getSupabaseClient();
+        const { error } = await db.from('bodegas_list').insert([{ name, code: code || null }]);
+        if (error) {
+            if (error.code === '23505') return alert('Ya existe una bodega con ese nombre');
+            throw error;
+        }
+
+        alert('Bodega agregada correctamente');
+        e.target.reset();
+        await loadBodegasList();
+        populateBodegas();
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+// ==================== ITEMS ====================
 
 function filterItemsByBodega(selectId, bodegaSelectId) {
     const bodega = document.getElementById(bodegaSelectId).value;
@@ -174,7 +236,6 @@ async function loadInventory() {
         if (error) throw error;
         inventoryData = data || [];
         renderInventory(inventoryData);
-        populateBodegas();
     } catch (err) {
         console.error('Error al cargar inventario:', err);
     }

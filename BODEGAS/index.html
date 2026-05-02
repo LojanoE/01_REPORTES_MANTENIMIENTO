@@ -293,6 +293,49 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Gestion de Bodegas -->
+                    <div class="col-12 admin-only">
+                        <div class="card bg-dark text-light border-info">
+                            <div class="card-header border-info">
+                                <h5 class="mb-0">Gesti&oacute;n de Bodegas</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-4">
+                                    <div class="col-lg-4">
+                                        <h6>Agregar Nueva Bodega</h6>
+                                        <form id="bodegaForm">
+                                            <div class="mb-3">
+                                                <label class="form-label">Nombre de Bodega <span class="text-danger">*</span></label>
+                                                <input type="text" id="bodegaName" class="form-control bg-dark text-light border-secondary" placeholder="Ej: Bodega GDR 6 (MV)" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">C&oacute;digo</label>
+                                                <input type="text" id="bodegaCode" class="form-control bg-dark text-light border-secondary" placeholder="Ej: MV">
+                                            </div>
+                                            <button type="submit" class="btn btn-info w-100">Agregar Bodega</button>
+                                        </form>
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <h6>Bodegas Registradas</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-dark table-hover table-sm align-middle">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Nombre</th>
+                                                        <th>C&oacute;digo</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="bodegasTableBody">
+                                                    <tr><td colspan="2" class="text-center">Cargando bodegas...</td></tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -302,6 +345,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script src="../auth.js?v=2.1.0"></script>
-    <script src="script.js?v=2.0.0"></script>
+    <script src="script.js?v=3.0.0"></script>
 </body>
 </html>
