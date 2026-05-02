@@ -90,6 +90,10 @@
                 <div class="card bg-dark text-light border-secondary">
                     <div class="card-body">
                         <div class="row g-2 mb-3 align-items-end">
+                            <div class="col-12 col-md-4">
+                                <small class="text-secondary d-block mb-1">Buscar</small>
+                                <input type="text" id="transSearch" class="form-control bg-dark text-light border-secondary" placeholder="C&oacute;digo, descripci&oacute;n, notas, vale...">
+                            </div>
                             <div class="col-6 col-md-2">
                                 <small class="text-secondary d-block mb-1">Desde</small>
                                 <input type="date" id="dateFrom" class="form-control bg-dark text-light border-secondary">
@@ -112,12 +116,12 @@
                                     <option value="">Todas las bodegas</option>
                                 </select>
                             </div>
-                            <div class="col-6 col-md-2">
-                                <small class="text-secondary d-block mb-1">&nbsp;</small>
-                                <button id="clearFiltersBtn" class="btn btn-outline-warning w-100">Limpiar filtros</button>
+                        </div>
+                        <div class="row g-2 mb-3 align-items-end">
+                            <div class="col-6 col-md-1">
+                                <button id="clearFiltersBtn" class="btn btn-outline-warning w-100" title="Limpiar filtros">&#10005; Limpiar</button>
                             </div>
-                            <div class="col-12 col-md-2">
-                                <small class="text-secondary d-block mb-1">&nbsp;</small>
+                            <div class="col-6 col-md-3">
                                 <button class="btn btn-outline-success w-100" onclick="exportToExcel()">Exportar a Excel</button>
                             </div>
                         </div>
@@ -365,6 +369,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script src="../auth.js?v=4.0.0"></script>
-    <script src="script.js?v=5.0.0"></script>
+    <script src="script.js?v=6.0.0"></script>
 </body>
 </html>

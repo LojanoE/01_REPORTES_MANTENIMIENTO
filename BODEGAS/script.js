@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('inventorySearch')?.addEventListener('input', debounce(filterInventory, 300));
     document.getElementById('bodegaFilter')?.addEventListener('change', filterInventory);
+    document.getElementById('transSearch')?.addEventListener('input', debounce(filterTransactions, 300));
     document.getElementById('typeFilter')?.addEventListener('change', filterTransactions);
     document.getElementById('dateFrom')?.addEventListener('change', filterTransactions);
     document.getElementById('dateTo')?.addEventListener('change', filterTransactions);
@@ -427,7 +428,7 @@ async function loadMoreTransactions() {
     }
 }
 
-async function loadFilteredTransactions(type, dateFrom, dateTo, bodega) {
+async function loadFilteredTransactions(searchTerm, type, dateFrom, dateTo, bodega) {
     try {
         const db = Auth.getSupabaseClient();
         let query = db
@@ -444,7 +445,27 @@ async function loadFilteredTransactions(type, dateFrom, dateTo, bodega) {
         const { data, error } = await query;
         if (error) throw error;
 
-        allTransactions = (data || []).map(preFormatTransaction);
+        let transactions = (data || []).map(preFormatTransaction);
+
+        if (searchTerm) {
+            const safe = searchTerm.toLowerCase();
+            transactions = transactions.filter(t => {
+                const code = (t.bodegas_inventory?.code || '').toLowerCase();
+                const desc = (t.bodegas_inventory?.description || '').toLowerCase();
+                const notes = (t.notes || '').toLowerCase();
+                const voucher = (t.voucher_code || '').toLowerCase();
+                const received = (t.received_by || '').toLowerCase();
+                const dispatched = (t.dispatched_by || '').toLowerCase();
+                const loc = (t.location || '').toLowerCase();
+                const createdBy = (t.created_by_name || '').toLowerCase();
+                const transBodega = (t.bodega || '').toLowerCase();
+                return code.includes(safe) || desc.includes(safe) || notes.includes(safe) ||
+                       voucher.includes(safe) || received.includes(safe) || dispatched.includes(safe) ||
+                       loc.includes(safe) || createdBy.includes(safe) || transBodega.includes(safe);
+            });
+        }
+
+        allTransactions = transactions;
         transLoadedAll = true;
         transFiltersActive = true;
         filteredTransactions = allTransactions;
@@ -460,19 +481,20 @@ async function loadFilteredTransactions(type, dateFrom, dateTo, bodega) {
 }
 
 async function filterTransactions() {
+    const searchTerm = document.getElementById('transSearch').value.trim().toLowerCase();
     const type = document.getElementById('typeFilter').value;
     const dateFrom = document.getElementById('dateFrom').value;
     const dateTo = document.getElementById('dateTo').value;
     const bodega = document.getElementById('transBodegaFilter').value;
 
-    const hasFilters = type || dateFrom || dateTo || bodega;
+    const hasFilters = searchTerm || type || dateFrom || dateTo || bodega;
 
     if (hasFilters) {
         const tbody = document.getElementById('transactionsTableBody');
         if (tbody) {
             tbody.innerHTML = '<tr><td colspan="11" class="text-center">Filtrando movimientos...</td></tr>';
         }
-        await loadFilteredTransactions(type, dateFrom, dateTo, bodega);
+        await loadFilteredTransactions(searchTerm, type, dateFrom, dateTo, bodega);
     } else {
         transFiltersActive = false;
         filteredTransactions = allTransactions;
@@ -482,6 +504,7 @@ async function filterTransactions() {
 }
 
 function clearTransFilters() {
+    document.getElementById('transSearch').value = '';
     document.getElementById('typeFilter').value = '';
     document.getElementById('dateFrom').value = '';
     document.getElementById('dateTo').value = '';
