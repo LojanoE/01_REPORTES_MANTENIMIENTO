@@ -368,7 +368,7 @@ async function loadTransactions() {
         const db = Auth.getSupabaseClient();
         const { data, error } = await db
             .from('bodegas_transactions')
-            .select('id,date,time,type,quantity,bodega,received_by,dispatched_by,voucher_code,location,notes,created_by_name,created_at,bodegas_inventory(code,description,bodega,unit)')
+            .select('id,date,time,type,quantity,bodega,received_by,dispatched_by,voucher_code,num_vale_egreso,ruta_td,td,num_item_td,num_solicitud_nc,ruta,location,notes,created_by_name,created_at,bodegas_inventory(code,description,bodega,unit)')
             .order('created_at', { ascending: false })
             .limit(TRANS_INITIAL_LIMIT);
 
@@ -408,7 +408,7 @@ async function loadMoreTransactions() {
         const db = Auth.getSupabaseClient();
         const { data, error } = await db
             .from('bodegas_transactions')
-            .select('id,date,time,type,quantity,bodega,received_by,dispatched_by,voucher_code,location,notes,created_by_name,created_at,bodegas_inventory(code,description,bodega,unit)')
+            .select('id,date,time,type,quantity,bodega,received_by,dispatched_by,voucher_code,num_vale_egreso,ruta_td,td,num_item_td,num_solicitud_nc,ruta,location,notes,created_by_name,created_at,bodegas_inventory(code,description,bodega,unit)')
             .lt('created_at', lastDate)
             .order('created_at', { ascending: false })
             .limit(TRANS_BATCH);
@@ -433,7 +433,7 @@ async function loadFilteredTransactions(searchTerm, type, dateFrom, dateTo, bode
         const db = Auth.getSupabaseClient();
         let query = db
             .from('bodegas_transactions')
-            .select('id,date,time,type,quantity,bodega,received_by,dispatched_by,voucher_code,location,notes,created_by_name,created_at,bodegas_inventory(code,description,bodega,unit)')
+            .select('id,date,time,type,quantity,bodega,received_by,dispatched_by,voucher_code,num_vale_egreso,ruta_td,td,num_item_td,num_solicitud_nc,ruta,location,notes,created_by_name,created_at,bodegas_inventory(code,description,bodega,unit)')
             .order('created_at', { ascending: false })
             .limit(TRANS_FILTER_LIMIT);
 
@@ -459,9 +459,17 @@ async function loadFilteredTransactions(searchTerm, type, dateFrom, dateTo, bode
                 const loc = (t.location || '').toLowerCase();
                 const createdBy = (t.created_by_name || '').toLowerCase();
                 const transBodega = (t.bodega || '').toLowerCase();
+                const numVale = (t.num_vale_egreso || '').toLowerCase();
+                const rutaTd = (t.ruta_td || '').toLowerCase();
+                const td = (t.td || '').toLowerCase();
+                const numItem = (t.num_item_td || '').toLowerCase();
+                const numSol = (t.num_solicitud_nc || '').toLowerCase();
+                const ruta = (t.ruta || '').toLowerCase();
                 return code.includes(safe) || desc.includes(safe) || notes.includes(safe) ||
                        voucher.includes(safe) || received.includes(safe) || dispatched.includes(safe) ||
-                       loc.includes(safe) || createdBy.includes(safe) || transBodega.includes(safe);
+                       loc.includes(safe) || createdBy.includes(safe) || transBodega.includes(safe) ||
+                       numVale.includes(safe) || rutaTd.includes(safe) || td.includes(safe) ||
+                       numItem.includes(safe) || numSol.includes(safe) || ruta.includes(safe);
             });
         }
 
@@ -475,7 +483,7 @@ async function loadFilteredTransactions(searchTerm, type, dateFrom, dateTo, bode
         console.error('Error al filtrar movimientos:', err);
         const tbody = document.getElementById('transactionsTableBody');
         if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Error al filtrar movimientos</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="17" class="text-center text-danger">Error al filtrar movimientos</td></tr>';
         }
     }
 }
@@ -492,7 +500,7 @@ async function filterTransactions() {
     if (hasFilters) {
         const tbody = document.getElementById('transactionsTableBody');
         if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="11" class="text-center">Filtrando movimientos...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="17" class="text-center">Filtrando movimientos...</td></tr>';
         }
         await loadFilteredTransactions(searchTerm, type, dateFrom, dateTo, bodega);
     } else {
@@ -521,7 +529,7 @@ function renderTransactionsBatch() {
     const batch = filteredTransactions.slice(transRendered, end);
 
     if (filteredTransactions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="11" class="text-center">No se encontraron movimientos</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="17" class="text-center">No se encontraron movimientos</td></tr>';
         const loadMoreBtn = document.getElementById('loadMoreBtn');
         const transCount = document.getElementById('transCount');
         if (loadMoreBtn) loadMoreBtn.style.display = 'none';
@@ -545,6 +553,12 @@ function renderTransactionsBatch() {
             '<td class="hide-mobile"><small>' + (t.received_by || '-') + '</small></td>' +
             '<td class="hide-mobile"><small>' + (t.dispatched_by || '-') + '</small></td>' +
             '<td class="hide-mobile"><small>' + (t.voucher_code || '-') + '</small></td>' +
+            '<td class="hide-mobile"><small>' + (t.num_vale_egreso || '-') + '</small></td>' +
+            '<td class="hide-mobile"><small>' + (t.ruta_td || '-') + '</small></td>' +
+            '<td class="hide-mobile"><small>' + (t.td || '-') + '</small></td>' +
+            '<td class="hide-mobile"><small>' + (t.num_item_td || '-') + '</small></td>' +
+            '<td class="hide-mobile"><small>' + (t.num_solicitud_nc || '-') + '</small></td>' +
+            '<td class="hide-mobile"><small>' + (t.ruta || '-') + '</small></td>' +
             '<td class="hide-mobile"><small>' + (t.location || '-') + '</small></td>' +
             '<td class="hide-mobile"><small>' + (t.notes || '-') + '</small></td>';
         fragment.appendChild(tr);
@@ -629,6 +643,12 @@ async function handleNewIngreso(e) {
             received_by: document.getElementById('ingresoReceivedBy').value.trim(),
             dispatched_by: document.getElementById('ingresoDispatchedBy').value.trim(),
             voucher_code: document.getElementById('ingresoVoucher').value.trim(),
+            num_vale_egreso: document.getElementById('ingresoNumVale').value.trim(),
+            ruta_td: document.getElementById('ingresoRutaTd').value.trim(),
+            td: document.getElementById('ingresoTd').value.trim(),
+            num_item_td: document.getElementById('ingresoNumItemTd').value.trim(),
+            num_solicitud_nc: document.getElementById('ingresoNumSolicitud').value.trim(),
+            ruta: document.getElementById('ingresoRuta').value.trim(),
             location: document.getElementById('ingresoLocation').value.trim(),
             notes: document.getElementById('ingresoReason').value.trim(),
             created_by_name: session.username
@@ -710,7 +730,13 @@ function exportToExcel() {
         Cantidad: t.quantity,
         Recibido_por: t.received_by || '',
         Despachado_por: t.dispatched_by || '',
-        Vale: t.voucher_code || '',
+        Codigo_Vale: t.voucher_code || '',
+        Num_Vale_Egreso: t.num_vale_egreso || '',
+        Ruta_TD: t.ruta_td || '',
+        TD: t.td || '',
+        Num_Item_TD: t.num_item_td || '',
+        Num_Solicitud_NC: t.num_solicitud_nc || '',
+        Ruta: t.ruta || '',
         Ubicacion: t.location || '',
         Notas: t.notes || ''
     }));

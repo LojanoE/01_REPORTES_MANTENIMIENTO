@@ -138,13 +138,19 @@
                                         <th class="text-center">Cant.</th>
                                         <th class="hide-mobile">Recibido</th>
                                         <th class="hide-mobile">Despachado</th>
-                                        <th class="hide-mobile">Vale</th>
+                                        <th class="hide-mobile">C&oacute;d. Vale</th>
+                                        <th class="hide-mobile">N&deg; V/E</th>
+                                        <th class="hide-mobile">Ruta TD</th>
+                                        <th class="hide-mobile">TD</th>
+                                        <th class="hide-mobile">N&deg; &Iacute;tem</th>
+                                        <th class="hide-mobile">N&deg; Sol. NC</th>
+                                        <th class="hide-mobile">Ruta</th>
                                         <th class="hide-mobile">Ubicaci&oacute;n</th>
                                         <th class="hide-mobile">Notas</th>
                                     </tr>
                                 </thead>
                                 <tbody id="transactionsTableBody">
-                                    <tr><td colspan="11" class="text-center">Cargando movimientos...</td></tr>
+                                    <tr><td colspan="17" class="text-center">Cargando movimientos...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -239,6 +245,34 @@
                                                     <label class="form-label">C&oacute;digo Vale</label>
                                                     <input type="text" id="ingresoVoucher" class="form-control bg-dark text-light border-secondary">
                                                 </div>
+                                            </div>
+                                            <div class="row g-3 mt-1">
+                                                <div class="col-md-2">
+                                                    <label class="form-label">N&deg; Vale/Egreso</label>
+                                                    <input type="text" id="ingresoNumVale" class="form-control bg-dark text-light border-secondary">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label">Ruta TD</label>
+                                                    <input type="text" id="ingresoRutaTd" class="form-control bg-dark text-light border-secondary">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label">TD</label>
+                                                    <input type="text" id="ingresoTd" class="form-control bg-dark text-light border-secondary">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label">N&deg; &Iacute;tem TD</label>
+                                                    <input type="text" id="ingresoNumItemTd" class="form-control bg-dark text-light border-secondary">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label">N&deg; Solicitud NC</label>
+                                                    <input type="text" id="ingresoNumSolicitud" class="form-control bg-dark text-light border-secondary">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label">Ruta</label>
+                                                    <input type="text" id="ingresoRuta" class="form-control bg-dark text-light border-secondary">
+                                                </div>
+                                            </div>
+                                            <div class="row g-3 mt-1">
                                                 <div class="col-md-3">
                                                     <label class="form-label">Recibido por</label>
                                                     <input type="text" id="ingresoReceivedBy" class="form-control bg-dark text-light border-secondary">
@@ -369,6 +403,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script src="../auth.js?v=4.0.0"></script>
-    <script src="script.js?v=6.0.0"></script>
+    <script src="script.js?v=7.0.0"></script>
 </body>
 </html>

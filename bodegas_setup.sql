@@ -45,6 +45,12 @@ CREATE TABLE IF NOT EXISTS bodegas_transactions (
     received_by TEXT,
     dispatched_by TEXT,
     voucher_code TEXT,
+    num_vale_egreso TEXT,
+    ruta_td TEXT,
+    td TEXT,
+    num_item_td TEXT,
+    num_solicitud_nc TEXT,
+    ruta TEXT,
     location TEXT,
     notes TEXT,
     created_by_name TEXT,
@@ -109,6 +115,24 @@ BEGIN
     END IF;
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'bodegas_transactions' AND column_name = 'location') THEN
         ALTER TABLE bodegas_transactions ADD COLUMN location TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'bodegas_transactions' AND column_name = 'num_vale_egreso') THEN
+        ALTER TABLE bodegas_transactions ADD COLUMN num_vale_egreso TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'bodegas_transactions' AND column_name = 'ruta_td') THEN
+        ALTER TABLE bodegas_transactions ADD COLUMN ruta_td TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'bodegas_transactions' AND column_name = 'td') THEN
+        ALTER TABLE bodegas_transactions ADD COLUMN td TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'bodegas_transactions' AND column_name = 'num_item_td') THEN
+        ALTER TABLE bodegas_transactions ADD COLUMN num_item_td TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'bodegas_transactions' AND column_name = 'num_solicitud_nc') THEN
+        ALTER TABLE bodegas_transactions ADD COLUMN num_solicitud_nc TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'bodegas_transactions' AND column_name = 'ruta') THEN
+        ALTER TABLE bodegas_transactions ADD COLUMN ruta TEXT;
     END IF;
 
     IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'bodegas_transactions' AND column_name = 'reason') THEN
