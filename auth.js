@@ -58,13 +58,19 @@ const Auth = {
             return { success: false, message: 'Usuario o contrasena incorrectos' };
         }
 
+        const permissions = await this.loadPermissions(data.id);
+
         const session = {
             userId: data.id,
             username: data.username,
             role: data.role,
+            permissions: permissions,
             loginTime: Date.now()
         };
         localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
+
+        await this.setCurrentUser(data.username);
+
         return { success: true, user: session };
     },
 
@@ -137,6 +143,7 @@ const Auth = {
         const roleLabels = { admin: 'Administrador', user: 'Usuario', viewer: 'Observador' };
         const roleClasses = { admin: 'user-bar__role--admin', user: 'user-bar__role--user', viewer: 'user-bar__role--viewer' };
         const adminBtn = session.role === 'admin' ? '<button class="auth-admin-btn" onclick="toggleUserPanel()">&#9881; Gestionar Usuarios</button>' : '';
+        const auditBtn = session.role === 'admin' ? '<button class="auth-admin-btn" onclick="toggleAuditPanel()">&#128203; Auditoria</button>' : '';
 
         const isSubApp = window.location.pathname.includes('/MANTENIMIENTO/') ||
                          window.location.pathname.includes('/POZOS/') ||
@@ -154,6 +161,7 @@ const Auth = {
                 </div>
                 <div class="auth-user-actions">
                     ${backBtn}
+                    ${auditBtn}
                     ${adminBtn}
                     <button class="auth-logout-btn" onclick="Auth.logoutAndRedirect()">Cerrar Sesion</button>
                 </div>
@@ -165,8 +173,14 @@ const Auth = {
 
     async loadUsers() {
         const db = this.getSupabaseClient();
-        const { data, error } = await db.from('users').select('id, username, role').order('username', { ascending: true });
-        if (error) throw error;
+        const { data, error } = await db
+            .from('users')
+            .select('id, username, role')
+            .order('username', { ascending: true });
+        if (error) {
+            console.error('Error cargando usuarios:', error);
+            throw error;
+        }
         return data || [];
     },
 
@@ -215,5 +229,95 @@ const Auth = {
             'viewer': '<span class="badge bg-secondary">Viewer</span>'
         };
         return badges[role] || '<span class="badge bg-light text-dark">' + role + '</span>';
+    },
+
+    // ==================== PERMISSIONS ====================
+
+    async loadPermissions(userId) {
+        const db = this.getSupabaseClient();
+        const { data, error } = await db.rpc('get_user_permissions', { p_user_id: userId });
+        if (error) {
+            console.warn('Error cargando permisos:', error.message);
+            return {};
+        }
+        const perms = {};
+        (data || []).forEach(p => {
+            perms[p.module] = {
+                can_view: p.can_view,
+                can_edit: p.can_edit,
+                can_delete: p.can_delete,
+                can_export: p.can_export
+            };
+        });
+        return perms;
+    },
+
+    async savePermissions(userId, permissions) {
+        const db = this.getSupabaseClient();
+        for (const [module, perms] of Object.entries(permissions)) {
+            const { error } = await db
+                .from('user_permissions')
+                .upsert({
+                    user_id: userId,
+                    module: module,
+                    can_view: perms.can_view || false,
+                    can_edit: perms.can_edit || false,
+                    can_delete: perms.can_delete || false,
+                    can_export: perms.can_export || false
+                }, { onConflict: 'user_id,module' })
+                .execute();
+            if (error) throw new Error(`Error en modulo ${module}: ${error.message}`);
+        }
+    },
+
+    async createDefaultPermissions(userId, role) {
+        const db = this.getSupabaseClient();
+        const { error } = await db.rpc('create_default_permissions', {
+            p_user_id: userId,
+            p_role: role
+        });
+        if (error) throw error;
+    },
+
+    hasPermission(module, action) {
+        const session = this.getSession();
+        if (!session) return false;
+        if (session.role === 'admin') return true;
+        if (!session.permissions || !session.permissions[module]) return false;
+        const key = 'can_' + action;
+        return !!session.permissions[module][key];
+    },
+
+    canView(module) { return this.hasPermission(module, 'view'); },
+    canEdit(module) { return this.hasPermission(module, 'edit'); },
+    canDelete(module) { return this.hasPermission(module, 'delete'); },
+    canExport(module) { return this.hasPermission(module, 'export'); },
+
+    async setCurrentUser(username) {
+        try {
+            const db = this.getSupabaseClient();
+            await db.rpc('set_current_user', { username: username });
+        } catch (e) {
+            console.warn('No se pudo setear current_user:', e.message);
+        }
+    },
+
+    async loadAuditLog(filters = {}) {
+        const db = this.getSupabaseClient();
+        let query = db
+            .from('audit_log')
+            .select('id,module,table_name,record_id,action,old_values,new_values,changed_by,changed_at,description')
+            .order('changed_at', { ascending: false })
+            .limit(500);
+
+        if (filters.module) query = query.eq('module', filters.module);
+        if (filters.action) query = query.eq('action', filters.action);
+        if (filters.changed_by) query = query.ilike('changed_by', '%' + filters.changed_by + '%');
+        if (filters.date_from) query = query.gte('changed_at', filters.date_from);
+        if (filters.date_to) query = query.lte('changed_at', filters.date_to + 'T23:59:59');
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return data || [];
     }
 };

@@ -4,8 +4,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     Auth.renderUserBar('userBar');
 
-    if (session.role === 'admin') {
+    if (!Auth.canView('bodegas')) {
+        document.body.innerHTML = '<div class="d-flex align-items-center justify-content-center min-vh-100"><h3 class="text-danger">No tienes permiso para acceder a este modulo</h3></div>';
+        return;
+    }
+
+    if (Auth.canEdit('bodegas')) {
         document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+    } else if (session.role === 'admin') {
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+    }
+
+    const exportBtns = document.querySelectorAll('button[onclick="exportToExcel()"], button[onclick="exportInventory()"]');
+    if (!Auth.canExport('bodegas')) {
+        exportBtns.forEach(btn => btn.style.display = 'none');
     }
 
     // Cargar todo en paralelo
@@ -316,6 +328,12 @@ function renderInventory(items) {
         const statusClass = stock <= 0 ? 'bg-danger' : stock <= min ? 'bg-warning text-dark' : 'bg-success';
         const specShort = (item.specifications || '').length > 30 ? item.specifications.substring(0, 30) + '...' : (item.specifications || '-');
 
+        const canEdit = Auth.canEdit('bodegas') || Auth.isAdmin();
+        const actionsHtml = canEdit
+            ? '<button class="btn btn-sm btn-outline-warning me-1" onclick="openEditInventory(' + item.id + ')" title="Editar">&#9998;</button>' +
+              '<button class="btn btn-sm btn-outline-danger" onclick="deleteInventoryItem(' + item.id + ', \'' + item.code.replace(/'/g, "\\'") + '\')" title="Eliminar">&#128465;</button>'
+            : '-';
+
         const tr = document.createElement('tr');
         tr.innerHTML = '<td><code>' + item.code + '</code></td>' +
             '<td><strong>' + item.description + '</strong></td>' +
@@ -326,7 +344,8 @@ function renderInventory(items) {
             '<td class="text-center"><strong>' + stock + '</strong></td>' +
             '<td class="text-center hide-mobile">' + min + '</td>' +
             '<td class="hide-mobile"><small>' + (item.location || '-') + '</small></td>' +
-            '<td class="text-center"><span class="badge ' + statusClass + '">' + statusText + '</span></td>';
+            '<td class="text-center"><span class="badge ' + statusClass + '">' + statusText + '</span></td>' +
+            '<td class="text-center">' + actionsHtml + '</td>';
         fragment.appendChild(tr);
     });
 
@@ -368,7 +387,7 @@ async function loadTransactions() {
         const db = Auth.getSupabaseClient();
         const { data, error } = await db
             .from('bodegas_transactions')
-            .select('id,date,time,type,quantity,bodega,received_by,dispatched_by,voucher_code,num_vale_egreso,ruta_td,td,num_item_td,num_solicitud_nc,ruta,location,notes,created_by_name,created_at,bodegas_inventory(code,description,bodega,unit)')
+            .select('id,date,time,type,quantity,bodega,received_by,dispatched_by,voucher_code,created_by_name,num_vale_egreso,ruta_td,td,num_item_td,num_solicitud_nc,ruta,location,notes,created_at,bodegas_inventory(code,description,bodega,unit)')
             .order('created_at', { ascending: false })
             .limit(TRANS_INITIAL_LIMIT);
 
@@ -408,7 +427,7 @@ async function loadMoreTransactions() {
         const db = Auth.getSupabaseClient();
         const { data, error } = await db
             .from('bodegas_transactions')
-            .select('id,date,time,type,quantity,bodega,received_by,dispatched_by,voucher_code,num_vale_egreso,ruta_td,td,num_item_td,num_solicitud_nc,ruta,location,notes,created_by_name,created_at,bodegas_inventory(code,description,bodega,unit)')
+            .select('id,date,time,type,quantity,bodega,received_by,dispatched_by,voucher_code,created_by_name,num_vale_egreso,ruta_td,td,num_item_td,num_solicitud_nc,ruta,location,notes,created_at,bodegas_inventory(code,description,bodega,unit)')
             .lt('created_at', lastDate)
             .order('created_at', { ascending: false })
             .limit(TRANS_BATCH);
@@ -433,7 +452,7 @@ async function loadFilteredTransactions(searchTerm, type, dateFrom, dateTo, bode
         const db = Auth.getSupabaseClient();
         let query = db
             .from('bodegas_transactions')
-            .select('id,date,time,type,quantity,bodega,received_by,dispatched_by,voucher_code,num_vale_egreso,ruta_td,td,num_item_td,num_solicitud_nc,ruta,location,notes,created_by_name,created_at,bodegas_inventory(code,description,bodega,unit)')
+            .select('id,date,time,type,quantity,bodega,received_by,dispatched_by,voucher_code,created_by_name,num_vale_egreso,ruta_td,td,num_item_td,num_solicitud_nc,ruta,location,notes,created_at,bodegas_inventory(code,description,bodega,unit)')
             .order('created_at', { ascending: false })
             .limit(TRANS_FILTER_LIMIT);
 
@@ -459,17 +478,12 @@ async function loadFilteredTransactions(searchTerm, type, dateFrom, dateTo, bode
                 const loc = (t.location || '').toLowerCase();
                 const createdBy = (t.created_by_name || '').toLowerCase();
                 const transBodega = (t.bodega || '').toLowerCase();
-                const numVale = (t.num_vale_egreso || '').toLowerCase();
-                const rutaTd = (t.ruta_td || '').toLowerCase();
-                const td = (t.td || '').toLowerCase();
-                const numItem = (t.num_item_td || '').toLowerCase();
-                const numSol = (t.num_solicitud_nc || '').toLowerCase();
-                const ruta = (t.ruta || '').toLowerCase();
                 return code.includes(safe) || desc.includes(safe) || notes.includes(safe) ||
                        voucher.includes(safe) || received.includes(safe) || dispatched.includes(safe) ||
                        loc.includes(safe) || createdBy.includes(safe) || transBodega.includes(safe) ||
                        numVale.includes(safe) || rutaTd.includes(safe) || td.includes(safe) ||
-                       numItem.includes(safe) || numSol.includes(safe) || ruta.includes(safe);
+                       numItem.includes(safe) || numSol.includes(safe) || ruta.includes(safe) ||
+                       createdBy.includes(safe);
             });
         }
 
@@ -483,7 +497,7 @@ async function loadFilteredTransactions(searchTerm, type, dateFrom, dateTo, bode
         console.error('Error al filtrar movimientos:', err);
         const tbody = document.getElementById('transactionsTableBody');
         if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="17" class="text-center text-danger">Error al filtrar movimientos</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="18" class="text-center text-danger">Error al filtrar movimientos</td></tr>';
         }
     }
 }
@@ -500,7 +514,7 @@ async function filterTransactions() {
     if (hasFilters) {
         const tbody = document.getElementById('transactionsTableBody');
         if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="17" class="text-center">Filtrando movimientos...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="18" class="text-center">Filtrando movimientos...</td></tr>';
         }
         await loadFilteredTransactions(searchTerm, type, dateFrom, dateTo, bodega);
     } else {
@@ -529,7 +543,7 @@ function renderTransactionsBatch() {
     const batch = filteredTransactions.slice(transRendered, end);
 
     if (filteredTransactions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="17" class="text-center">No se encontraron movimientos</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="19" class="text-center">No se encontraron movimientos</td></tr>';
         const loadMoreBtn = document.getElementById('loadMoreBtn');
         const transCount = document.getElementById('transCount');
         if (loadMoreBtn) loadMoreBtn.style.display = 'none';
@@ -543,6 +557,12 @@ function renderTransactionsBatch() {
         const typeBadge = t.type === 'IN' ? '\u2191 INGRESO' : '\u2193 EGRESO';
         const typeClass = t.type === 'IN' ? 'text-success' : 'text-danger';
 
+        const canEdit = Auth.canEdit('bodegas') || Auth.isAdmin();
+        const actionsHtml = canEdit
+            ? '<button class="btn btn-sm btn-outline-warning me-1" onclick="openEditTransaction(' + t.id + ')" title="Editar">&#9998;</button>' +
+              '<button class="btn btn-sm btn-outline-danger" onclick="deleteTransaction(' + t.id + ')" title="Eliminar">&#128465;</button>'
+            : '-';
+
         const tr = document.createElement('tr');
         tr.innerHTML = '<td>' + t._dateStr + '</td>' +
             '<td class="hide-mobile">' + (t._timeStr || '-') + '</td>' +
@@ -552,6 +572,7 @@ function renderTransactionsBatch() {
             '<td class="text-center"><strong>' + t.quantity + '</strong></td>' +
             '<td class="hide-mobile"><small>' + (t.received_by || '-') + '</small></td>' +
             '<td class="hide-mobile"><small>' + (t.dispatched_by || '-') + '</small></td>' +
+            '<td class="hide-mobile"><small>' + (t.created_by_name || '-') + '</small></td>' +
             '<td class="hide-mobile"><small>' + (t.voucher_code || '-') + '</small></td>' +
             '<td class="hide-mobile"><small>' + (t.num_vale_egreso || '-') + '</small></td>' +
             '<td class="hide-mobile"><small>' + (t.ruta_td || '-') + '</small></td>' +
@@ -560,7 +581,8 @@ function renderTransactionsBatch() {
             '<td class="hide-mobile"><small>' + (t.num_solicitud_nc || '-') + '</small></td>' +
             '<td class="hide-mobile"><small>' + (t.ruta || '-') + '</small></td>' +
             '<td class="hide-mobile"><small>' + (t.location || '-') + '</small></td>' +
-            '<td class="hide-mobile"><small>' + (t.notes || '-') + '</small></td>';
+            '<td class="hide-mobile"><small>' + (t.notes || '-') + '</small></td>' +
+            '<td class="text-center">' + actionsHtml + '</td>';
         fragment.appendChild(tr);
     });
 
@@ -605,6 +627,7 @@ async function handleNewItem(e) {
     };
 
     try {
+        await Auth.setCurrentUser(session.username);
         const db = Auth.getSupabaseClient();
         const { error } = await db.from('bodegas_inventory').insert([newItem]);
         if (error) throw error;
@@ -634,6 +657,7 @@ async function handleNewIngreso(e) {
     const session = Auth.getSession();
 
     try {
+        await Auth.setCurrentUser(session.username);
         const db = Auth.getSupabaseClient();
         const { error } = await db.from('bodegas_transactions').insert([{
             item_id: itemId,
@@ -689,6 +713,7 @@ async function handleNewEgreso(e) {
     const session = Auth.getSession();
 
     try {
+        await Auth.setCurrentUser(session.username);
         const db = Auth.getSupabaseClient();
         const { error } = await db.from('bodegas_transactions').insert([{
             item_id: itemId,
@@ -715,6 +740,160 @@ async function handleNewEgreso(e) {
     }
 }
 
+// ==================== EDICION Y ELIMINACION ====================
+
+async function openEditInventory(id) {
+    try {
+        const db = Auth.getSupabaseClient();
+        const { data, error } = await db.from('bodegas_inventory').select('*').eq('id', id).single();
+        if (error) throw error;
+
+        document.getElementById('editInvId').value = data.id;
+        document.getElementById('editInvCode').value = data.code || '';
+        document.getElementById('editInvBodega').value = data.bodega || '';
+        document.getElementById('editInvDesc').value = data.description || '';
+        document.getElementById('editInvSpec').value = data.specifications || '';
+        document.getElementById('editInvUnit').value = data.unit || '';
+        document.getElementById('editInvMin').value = data.min_stock || 0;
+        document.getElementById('editInvLoc').value = data.location || '';
+        document.getElementById('editInventoryModal').style.display = 'flex';
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+function closeEditInventoryModal() {
+    document.getElementById('editInventoryModal').style.display = 'none';
+}
+
+async function handleSaveInventoryEdit() {
+    const id = parseInt(document.getElementById('editInvId').value);
+    const updates = {
+        description: document.getElementById('editInvDesc').value.trim(),
+        specifications: document.getElementById('editInvSpec').value.trim(),
+        unit: document.getElementById('editInvUnit').value.trim() || 'UND',
+        min_stock: parseFloat(document.getElementById('editInvMin').value) || 0,
+        location: document.getElementById('editInvLoc').value.trim()
+    };
+
+    try {
+        const db = Auth.getSupabaseClient();
+        const { error } = await db.from('bodegas_inventory').update(updates).eq('id', id);
+        if (error) throw error;
+
+        alert('Articulo actualizado correctamente');
+        closeEditInventoryModal();
+        formItemsCache = {};
+        await loadInventory(inventoryPage, inventorySearchTerm, inventoryBodegaFilter);
+        await filterItemsByBodega('ingresoItem', 'ingresoBodega');
+        await filterItemsByBodega('egresoItem', 'egresoBodega');
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+async function deleteInventoryItem(id, code) {
+    if (!confirm('¿Está seguro de eliminar el articulo "' + code + '"? Esta accion no se puede deshacer.')) return;
+
+    try {
+        const db = Auth.getSupabaseClient();
+        const { error } = await db.from('bodegas_inventory').delete().eq('id', id);
+        if (error) throw error;
+
+        alert('Articulo eliminado correctamente');
+        formItemsCache = {};
+        await loadInventory(inventoryPage, inventorySearchTerm, inventoryBodegaFilter);
+        await filterItemsByBodega('ingresoItem', 'ingresoBodega');
+        await filterItemsByBodega('egresoItem', 'egresoBodega');
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+async function openEditTransaction(id) {
+    try {
+        const db = Auth.getSupabaseClient();
+        const { data, error } = await db.from('bodegas_transactions').select('*').eq('id', id).single();
+        if (error) throw error;
+
+        document.getElementById('editTransId').value = data.id;
+        document.getElementById('editTransDate').value = data.date ? data.date.substring(0, 10) : '';
+        document.getElementById('editTransQty').value = data.quantity || '';
+        document.getElementById('editTransType').value = data.type === 'IN' ? 'INGRESO' : 'EGRESO';
+        document.getElementById('editTransResp').value = data.created_by_name || '';
+        document.getElementById('editTransDisp').value = data.dispatched_by || '';
+        document.getElementById('editTransVoucher').value = data.voucher_code || '';
+        document.getElementById('editTransNumVale').value = data.num_vale_egreso || '';
+        document.getElementById('editTransRutaTd').value = data.ruta_td || '';
+        document.getElementById('editTransTd').value = data.td || '';
+        document.getElementById('editTransNumItem').value = data.num_item_td || '';
+        document.getElementById('editTransNumSol').value = data.num_solicitud_nc || '';
+        document.getElementById('editTransRuta').value = data.ruta || '';
+        document.getElementById('editTransLoc').value = data.location || '';
+        document.getElementById('editTransNotes').value = data.notes || '';
+        document.getElementById('editTransModal').style.display = 'flex';
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+function closeEditTransModal() {
+    document.getElementById('editTransModal').style.display = 'none';
+}
+
+async function handleSaveTransEdit() {
+    const id = parseInt(document.getElementById('editTransId').value);
+    const oldQty = filteredTransactions.find(t => t.id === id)?.quantity;
+    const newQty = parseFloat(document.getElementById('editTransQty').value);
+
+    const updates = {
+        date: document.getElementById('editTransDate').value || new Date().toISOString().substring(0, 10),
+        quantity: newQty,
+        created_by_name: document.getElementById('editTransResp').value.trim(),
+        dispatched_by: document.getElementById('editTransDisp').value.trim(),
+        voucher_code: document.getElementById('editTransVoucher').value.trim(),
+        num_vale_egreso: document.getElementById('editTransNumVale').value.trim(),
+        ruta_td: document.getElementById('editTransRutaTd').value.trim(),
+        td: document.getElementById('editTransTd').value.trim(),
+        num_item_td: document.getElementById('editTransNumItem').value.trim(),
+        num_solicitud_nc: document.getElementById('editTransNumSol').value.trim(),
+        ruta: document.getElementById('editTransRuta').value.trim(),
+        location: document.getElementById('editTransLoc').value.trim(),
+        notes: document.getElementById('editTransNotes').value.trim()
+    };
+
+    try {
+        const db = Auth.getSupabaseClient();
+        const { error } = await db.from('bodegas_transactions').update(updates).eq('id', id);
+        if (error) throw error;
+
+        alert('Movimiento actualizado correctamente');
+        closeEditTransModal();
+        await Promise.all([loadInventory(1, inventorySearchTerm, inventoryBodegaFilter), loadTransactions()]);
+        await filterItemsByBodega('ingresoItem', 'ingresoBodega');
+        await filterItemsByBodega('egresoItem', 'egresoBodega');
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+async function deleteTransaction(id) {
+    if (!confirm('¿Está seguro de eliminar este movimiento? El stock se ajustara automaticamente.')) return;
+
+    try {
+        const db = Auth.getSupabaseClient();
+        const { error } = await db.from('bodegas_transactions').delete().eq('id', id);
+        if (error) throw error;
+
+        alert('Movimiento eliminado correctamente');
+        await Promise.all([loadInventory(1, inventorySearchTerm, inventoryBodegaFilter), loadTransactions()]);
+        await filterItemsByBodega('ingresoItem', 'ingresoBodega');
+        await filterItemsByBodega('egresoItem', 'egresoBodega');
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
 // ==================== EXPORTAR ====================
 
 function exportToExcel() {
@@ -730,6 +909,7 @@ function exportToExcel() {
         Cantidad: t.quantity,
         Recibido_por: t.received_by || '',
         Despachado_por: t.dispatched_by || '',
+        Responsable: t.created_by_name || '',
         Codigo_Vale: t.voucher_code || '',
         Num_Vale_Egreso: t.num_vale_egreso || '',
         Ruta_TD: t.ruta_td || '',

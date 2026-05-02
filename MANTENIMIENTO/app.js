@@ -481,8 +481,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     Auth.renderUserBar('userBar');
 
-    // Role-based permissions: viewer can only see Consulta tab
-    if (currentSession.role === 'viewer') {
+    if (!Auth.canView('mantenimiento')) {
+        document.body.innerHTML = '<div class="d-flex align-items-center justify-content-center min-vh-100"><h3 class="text-danger">No tienes permiso para acceder a este modulo</h3></div>';
+        return;
+    }
+
+    if (!Auth.canEdit('mantenimiento') && !Auth.isAdmin()) {
         const registroTab = document.getElementById('registro-tab');
         const registroPane = document.getElementById('registro');
         if (registroTab) registroTab.style.display = 'none';
@@ -497,7 +501,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (consultaTab) {
             consultaTab.classList.add('active');
         }
-        // Hide the submit button area in the form just in case
         const submitBtn = document.querySelector('#mantenimientoForm button[type="submit"]');
         if (submitBtn) submitBtn.closest('form').style.display = 'none';
     }
@@ -648,6 +651,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Datos a enviar a Supabase:', datosParaEnvio);
 
         try {
+            await Auth.setCurrentUser(currentSession ? currentSession.username : 'Sistema');
             const { data: result, error } = await _supabase
                 .from('mantenimiento')
                 .insert([datosParaEnvio])

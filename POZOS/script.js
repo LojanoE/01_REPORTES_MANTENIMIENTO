@@ -21,6 +21,12 @@ window.addEventListener('DOMContentLoaded', () => {
     if (!currentSession) return;
     supabaseClient = Auth.getSupabaseClient();
     Auth.renderUserBar('userBar');
+
+    if (!Auth.canView('pozos')) {
+        document.body.innerHTML = '<div class="d-flex align-items-center justify-content-center min-vh-100"><h3 class="text-danger">No tienes permiso para acceder a este modulo</h3></div>';
+        return;
+    }
+
     initVersion();
     applyRolePermissions(currentSession.role);
     loadDataByDate();
@@ -277,6 +283,7 @@ async function saveToDatabase(silent = false) {
         };
 
         let result;
+        await Auth.setCurrentUser(currentSession ? currentSession.username : 'Sistema');
         // Check if there's an existing record for this date to update instead of inserting new version
         const existingRecord = currentDayRecords[0];
         if (existingRecord) {

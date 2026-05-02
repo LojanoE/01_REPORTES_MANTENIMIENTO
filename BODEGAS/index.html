@@ -67,10 +67,11 @@
                                         <th class="hide-mobile text-center">M&iacute;n.</th>
                                         <th class="hide-mobile">Ubicaci&oacute;n</th>
                                         <th class="text-center">Estado</th>
+                                        <th class="text-center acciones-col">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody id="inventoryTableBody">
-                                    <tr><td colspan="10" class="text-center">Cargando inventario...</td></tr>
+                                    <tr><td colspan="11" class="text-center">Cargando inventario...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -138,6 +139,7 @@
                                         <th class="text-center">Cant.</th>
                                         <th class="hide-mobile">Recibido</th>
                                         <th class="hide-mobile">Despachado</th>
+                                        <th class="hide-mobile">Responsable</th>
                                         <th class="hide-mobile">C&oacute;d. Vale</th>
                                         <th class="hide-mobile">N&deg; V/E</th>
                                         <th class="hide-mobile">Ruta TD</th>
@@ -147,10 +149,11 @@
                                         <th class="hide-mobile">Ruta</th>
                                         <th class="hide-mobile">Ubicaci&oacute;n</th>
                                         <th class="hide-mobile">Notas</th>
+                                        <th class="text-center acciones-col">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody id="transactionsTableBody">
-                                    <tr><td colspan="17" class="text-center">Cargando movimientos...</td></tr>
+                                    <tr><td colspan="19" class="text-center">Cargando movimientos...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -395,6 +398,128 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Inventory Modal -->
+    <div id="editInventoryModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">&#9998; Editar Articulo</h5>
+                <button class="modal-close-btn" onclick="closeEditInventoryModal()">&#10005;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editInvId">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Codigo</label>
+                        <input type="text" id="editInvCode" class="form-control bg-dark text-light border-secondary" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Bodega</label>
+                        <input type="text" id="editInvBodega" class="form-control bg-dark text-light border-secondary" readonly>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Descripcion</label>
+                        <input type="text" id="editInvDesc" class="form-control bg-dark text-light border-secondary">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Especificaciones</label>
+                        <input type="text" id="editInvSpec" class="form-control bg-dark text-light border-secondary">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Unidad</label>
+                        <input type="text" id="editInvUnit" class="form-control bg-dark text-light border-secondary">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Stock Minimo</label>
+                        <input type="number" id="editInvMin" class="form-control bg-dark text-light border-secondary" step="0.01">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Ubicacion</label>
+                        <input type="text" id="editInvLoc" class="form-control bg-dark text-light border-secondary">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditInventoryModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="handleSaveInventoryEdit()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Transaction Modal -->
+    <div id="editTransModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">&#9998; Editar Movimiento</h5>
+                <button class="modal-close-btn" onclick="closeEditTransModal()">&#10005;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editTransId">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Fecha</label>
+                        <input type="date" id="editTransDate" class="form-control bg-dark text-light border-secondary">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Cantidad</label>
+                        <input type="number" id="editTransQty" class="form-control bg-dark text-light border-secondary" step="0.01" min="0.01">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Tipo</label>
+                        <input type="text" id="editTransType" class="form-control bg-dark text-light border-secondary" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Responsable</label>
+                        <input type="text" id="editTransResp" class="form-control bg-dark text-light border-secondary">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Despachado por</label>
+                        <input type="text" id="editTransDisp" class="form-control bg-dark text-light border-secondary">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Cod. Vale</label>
+                        <input type="text" id="editTransVoucher" class="form-control bg-dark text-light border-secondary">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">N&deg; V/E</label>
+                        <input type="text" id="editTransNumVale" class="form-control bg-dark text-light border-secondary">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Ruta TD</label>
+                        <input type="text" id="editTransRutaTd" class="form-control bg-dark text-light border-secondary">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">TD</label>
+                        <input type="text" id="editTransTd" class="form-control bg-dark text-light border-secondary">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">N&deg; Item TD</label>
+                        <input type="text" id="editTransNumItem" class="form-control bg-dark text-light border-secondary">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">N&deg; Sol. NC</label>
+                        <input type="text" id="editTransNumSol" class="form-control bg-dark text-light border-secondary">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Ruta</label>
+                        <input type="text" id="editTransRuta" class="form-control bg-dark text-light border-secondary">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Ubicacion</label>
+                        <input type="text" id="editTransLoc" class="form-control bg-dark text-light border-secondary">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Notas / Motivo</label>
+                        <input type="text" id="editTransNotes" class="form-control bg-dark text-light border-secondary">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditTransModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="handleSaveTransEdit()">Guardar Cambios</button>
             </div>
         </div>
     </div>
