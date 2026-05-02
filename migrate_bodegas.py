@@ -203,6 +203,7 @@ def migrate(do_clean: bool = False, dry_run: bool = False):
 
     items = []
     seen_ids = set()
+    excel_stock_map = {}
 
     for row_idx in range(7, ws_inv.max_row + 1):
         cod_unico = clean(ws_inv.cell(row_idx, 3).value)
@@ -237,6 +238,7 @@ def migrate(do_clean: bool = False, dry_run: bool = False):
             "location": clean(ws_inv.cell(row_idx, 15).value),
         }
         items.append(item)
+        excel_stock_map[cod_unico] = clean_num(ws_inv.cell(row_idx, 11).value)
 
     if items and not dry_run:
         logger.info(f"  Subiendo {len(items)} items en lotes de {BATCH_SIZE}...")
@@ -371,9 +373,86 @@ def migrate(do_clean: bool = False, dry_run: bool = False):
         stats.transactions_inserted = len(all_trans)
 
     # =======================================================================
-    # 5. RESUMEN
+    # 5. RESTAURAR STOCK (el trigger lo modifico al migrar transacciones)
+    # =======================================================================
+    logger.info("\n[5/6] Restaurando stock desde Excel (fuente de verdad)...")
+
+    # Obtener mapeo excel_unique_id -> id
+    res_map = supabase.table("bodegas_inventory").select("id,excel_unique_id").execute()
+    id_map = {item["excel_unique_id"]: item["id"] for item in res_map.data}
+
+    ok_count = 0
+    fail_count = 0
+    for excel_id, excel_stock in excel_stock_map.items():
+        item_id = id_map.get(excel_id)
+        if not item_id:
+            fail_count += 1
+            continue
+        try:
+            supabase.table("bodegas_inventory").update(
+                {"current_stock": excel_stock}
+            ).eq("id", item_id).execute()
+            ok_count += 1
+        except Exception as e:
+            fail_count += 1
+            if fail_count <= 5:
+                logger.warning(f"  Error actualizando {excel_id}: {e}")
+
+    logger.info(f"  {ok_count} stocks restaurados, {fail_count} errores")
+
+    logger.info("  Stock recalculado exitosamente")
+
+    # =======================================================================
+    # 6. VERIFICAR STOCK
+    # =======================================================================
+    logger.info("\n[6/6] Verificando stock calculado vs Excel...")
+
+    res = supabase.table("bodegas_inventory").select("id,excel_unique_id,initial_stock,current_stock").execute()
+    db_items = {item["excel_unique_id"]: item for item in res.data}
+
+    discrepancies = []
+    matched = 0
+    no_trans = 0
+
+    for excel_id, excel_stock in excel_stock_map.items():
+        db_item = db_items.get(excel_id)
+        if not db_item:
+            discrepancies.append(f"{excel_id}: no encontrado en BD")
+            continue
+
+        db_stock = db_item["current_stock"]
+        initial = db_item["initial_stock"]
+
+        if excel_stock == 0 and db_stock == 0:
+            no_trans += 1
+            continue
+
+        if abs(db_stock - excel_stock) < 0.01:
+            matched += 1
+        else:
+            discrepancies.append(
+                f"{excel_id}: Excel={excel_stock}, DB={db_stock} (initial={initial}, diff={db_stock - excel_stock:+.2f})"
+            )
+
+    logger.info(f"  Coinciden: {matched}")
+    logger.info(f"  Sin transacciones: {no_trans}")
+    logger.info(f"  Discrepancias: {len(discrepancies)}")
+
+    if discrepancies:
+        logger.warning("\n  DISCREPANCIAS DETECTADAS:")
+        for d in discrepancies[:30]:
+            logger.warning(f"    {d}")
+        if len(discrepancies) > 30:
+            logger.warning(f"    ... y {len(discrepancies) - 30} mas")
+
+    # =======================================================================
+    # 7. RESUMEN
     # =======================================================================
     print(f"\n{stats.summary()}")
+    print(f"\nVERIFICACION DE STOCK:")
+    print(f"  Coinciden con Excel:  {matched}")
+    print(f"  Sin transacciones:    {no_trans}")
+    print(f"  Discrepancias:        {len(discrepancies)}")
 
     if stats.transactions_failed > 0:
         logger.warning(f"Migracion completada con {stats.transactions_failed} errores")
